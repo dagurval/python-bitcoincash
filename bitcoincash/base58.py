@@ -1,7 +1,7 @@
 # Copyright (C) 2011 Sam Rushing
 # Copyright (C) 2013-2014 The python-bitcoinlib developers
 #
-# This file is part of python-bitcoinlib.
+# This file is part of python-bitcoincashlib.
 #
 # It is subject to the license terms in the LICENSE file found in the top-level
 # directory of this distribution.

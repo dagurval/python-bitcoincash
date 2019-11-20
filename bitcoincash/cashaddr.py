@@ -18,6 +18,18 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+#
+# Copyright (C) 2019 The python-bitcoincashlib developers
+# This file is part of python-bitcoincashlib.
+#
+# It is subject to the license terms in the LICENSE file found in the top-level
+# directory of this distribution.
+#
+# No part of python-bitcoinlib, including this file, may be copied, modified,
+# propagated, or distributed except according to the terms contained in the
+# LICENSE file.
+
+
 
 _CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
 
@@ -199,3 +211,48 @@ def encode(prefix, kind, addr_hash):
 def encode_full(prefix, kind, addr_hash):
     """Encode a full cashaddr address, with prefix and separator."""
     return ':'.join([prefix, encode(prefix, kind, addr_hash)])
+
+
+class CashAddrData(bytes):
+    """CashAddr-encoded data"""
+    def __new__(cls, s):
+        prefix, kind, addr_hash = decode(s)
+        return cls.from_bytes(addr_hash, prefix, kind)
+
+    def __init__(self, s):
+        """Initialize from cashaddr-encoded string
+
+        Note: subclasses put your initialization routines here, but ignore the
+        argument - that's handled by __new__(), and .from_bytes() will call
+        __init__() with None in place of the string.
+        """
+
+    @classmethod
+    def from_bytes(cls, data, prefix, kind):
+        self = bytes.__new__(cls, data)
+        self.prefix = prefix
+        self.kind = kind
+
+        return self
+
+    def to_bytes(self):
+        """Convert to bytes instance
+
+        Note that it's the data represented that is converted; the prefix and
+        kind is not included.
+        """
+        return b'' + self
+
+    def __str__(self):
+        """Convert to string"""
+        return encode_full(self.prefix, self.kind, b'' + self)
+
+    def __repr__(self):
+        return '%s(%r)' % (self.__class__.__name__, str(self))
+
+__all__ = (
+        'encode',
+        'decode',
+        'encode_full',
+        'CashAddr',
+)

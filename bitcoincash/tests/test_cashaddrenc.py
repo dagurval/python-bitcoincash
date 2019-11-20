@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 # Copyright (c) 2017 Pieter Wuille
+# Copyright (c) 2017 Shammah Chancellor, Neil Booth
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,6 +20,16 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+#
+# Copyright (C) 2019 The python-bitcoincashlib developers
+# This file is part of python-bitcoincashlib.
+#
+# It is subject to the license terms in the LICENSE file found in the top-level
+# directory of this distribution.
+#
+# No part of python-bitcoinlib, including this file, may be copied, modified,
+# propagated, or distributed except according to the terms contained in the
+# LICENSE file.
 
 
 """Reference tests for cashaddr adresses"""
@@ -178,6 +189,13 @@ class TestCashAddrAddress(unittest.TestCase):
             self.assertEqual(rprefix, BCH_PREFIX)
             self.assertEqual(kind, cashaddr.PUBKEY_TYPE)
             self.assertEqual(addr_hash, hashbytes)
+
+    def test_cashaddrdata(self):
+        """Test that the wrapper class encodes/decodes correctly"""
+        for (address, hashbytes) in zip(VALID_PUBKEY_ADDRESSES, VALID_HASHES):
+            c = cashaddr.CashAddrData(address)
+            self.assertEqual(hashbytes, c.to_bytes())
+            self.assertEqual(address, str(c))
 
 if __name__ == '__main__':
     unittest.main()
