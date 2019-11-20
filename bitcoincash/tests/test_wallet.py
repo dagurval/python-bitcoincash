@@ -18,34 +18,35 @@ from bitcoincash.core import b2x, x
 from bitcoincash.core.script import CScript, IsLowDERSignature
 from bitcoincash.core.key import CPubKey, is_libsec256k1_available, use_libsecp256k1_for_signing
 from bitcoincash.wallet import *
+import bitcoincash.cashaddr
 
 class Test_CBitcoinAddress(unittest.TestCase):
     def test_create_from_string(self):
         """Create CBitcoinAddress's from strings"""
 
-        def T(str_addr, expected_bytes, expected_nVersion, expected_class):
+        def T(str_addr, expected_bytes, expected_type, expected_class):
             addr = CBitcoinAddress(str_addr)
             self.assertEqual(addr.to_bytes(), expected_bytes)
-            self.assertEqual(addr.nVersion, expected_nVersion)
+            self.assertEqual(addr.kind, expected_type)
             self.assertEqual(addr.__class__, expected_class)
 
-        T('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
-          x('62e907b15cbf27d5425399ebf6f0fb50ebb88f18'), 0,
+        T('bitcoincash:qp3wjpa3tjlj042z2wv7hahsldgwhwy0rq9sywjpyy',
+          x('62e907b15cbf27d5425399ebf6f0fb50ebb88f18'), bitcoincash.cashaddr.PUBKEY_TYPE,
           P2PKHBitcoinAddress)
 
-        T('37k7toV1Nv4DfmQbmZ8KuZDQCYK9x5KpzP',
-          x('4266fc6f2c2861d7fe229b279a79803afca7ba34'), 5,
+        T('bitcoincash:pppxdlr09s5xr4l7y2dj0xnesqa0efa6xsxkp8ax88',
+          x('4266fc6f2c2861d7fe229b279a79803afca7ba34'), bitcoincash.cashaddr.SCRIPT_TYPE,
           P2SHBitcoinAddress)
 
-    def test_wrong_nVersion(self):
-        """Creating a CBitcoinAddress from a unknown nVersion fails"""
+    def test_wrong_prefix(self):
+        """Creating a CBitcoinAddress from wrong prefix fails"""
 
         # tests run in mainnet, so both of the following should fail
         with self.assertRaises(CBitcoinAddressError):
-            CBitcoinAddress('mpXwg4jMtRhuSpVq4xS3HFHmCmWp9NyGKt')
+            CBitcoinAddress('bchtest:qp3wjpa3tjlj042z2wv7hahsldgwhwy0rqpzqfskrc')
 
         with self.assertRaises(CBitcoinAddressError):
-            CBitcoinAddress('2MyJKxYR2zNZZsZ39SgkCXWCfQtXKhnWSWq')
+            CBitcoinAddress('bchtest:pppxdlr09s5xr4l7y2dj0xnesqa0efa6xszy9ql3qm')
 
     def test_from_scriptPubKey(self):
         def T(hex_scriptpubkey, expected_str_address, expected_class):
@@ -54,9 +55,11 @@ class Test_CBitcoinAddress(unittest.TestCase):
             self.assertEqual(str(addr), expected_str_address)
             self.assertEqual(addr.__class__, expected_class)
 
-        T('a914000000000000000000000000000000000000000087', '31h1vYVSYuKP6AhS86fbRdMw9XHieotbST',
+        T('a914000000000000000000000000000000000000000087',
+          'bitcoincash:pqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq7k2ehe5v',
           P2SHBitcoinAddress)
-        T('76a914000000000000000000000000000000000000000088ac', '1111111111111111111114oLvT2',
+        T('76a914000000000000000000000000000000000000000088ac',
+          'bitcoincash:qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqfnhks603',
           P2PKHBitcoinAddress)
 
     def test_from_nonstd_scriptPubKey(self):
@@ -109,16 +112,16 @@ class Test_CBitcoinAddress(unittest.TestCase):
             actual_scriptPubKey = addr.to_scriptPubKey()
             self.assertEqual(b2x(actual_scriptPubKey), expected_scriptPubKey_hexbytes)
 
-        T('31h1vYVSYuKP6AhS86fbRdMw9XHieotbST',
+        T('bitcoincash:pqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq7k2ehe5v',
           'a914000000000000000000000000000000000000000087')
 
-        T('1111111111111111111114oLvT2',
+        T('bitcoincash:qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqfnhks603',
           '76a914000000000000000000000000000000000000000088ac')
 
 class Test_P2SHBitcoinAddress(unittest.TestCase):
     def test_from_redeemScript(self):
         addr = P2SHBitcoinAddress.from_redeemScript(CScript())
-        self.assertEqual(str(addr), '3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy')
+        self.assertEqual(str(addr), 'bitcoincash:pz689gnx6z7cnsfhq6jpxtx0k9hhcwulev5cpumfk0')
 
 class Test_P2PKHBitcoinAddress(unittest.TestCase):
     def test_from_non_canonical_scriptPubKey(self):
@@ -131,9 +134,12 @@ class Test_P2PKHBitcoinAddress(unittest.TestCase):
             with self.assertRaises(CBitcoinAddressError):
                 P2PKHBitcoinAddress.from_scriptPubKey(scriptPubKey, accept_non_canonical_pushdata=False)
 
-        T('76a94c14000000000000000000000000000000000000000088ac', '1111111111111111111114oLvT2')
-        T('76a94d1400000000000000000000000000000000000000000088ac', '1111111111111111111114oLvT2'),
-        T('76a94e14000000000000000000000000000000000000000000000088ac', '1111111111111111111114oLvT2')
+        T('76a94c14000000000000000000000000000000000000000088ac',
+            legacy_to_cashaddr('1111111111111111111114oLvT2'))
+        T('76a94d1400000000000000000000000000000000000000000088ac',
+            legacy_to_cashaddr('1111111111111111111114oLvT2'))
+        T('76a94e14000000000000000000000000000000000000000000000088ac',
+            legacy_to_cashaddr('1111111111111111111114oLvT2'))
 
         # make sure invalid scripts raise CBitcoinAddressError
         with self.assertRaises(CBitcoinAddressError):
@@ -150,13 +156,16 @@ class Test_P2PKHBitcoinAddress(unittest.TestCase):
                 P2PKHBitcoinAddress.from_scriptPubKey(scriptPubKey, accept_bare_checksig=False)
 
         # compressed
-        T('21000000000000000000000000000000000000000000000000000000000000000000ac', '14p5cGy5DZmtNMQwTQiytBvxMVuTmFMSyU')
+        T('21000000000000000000000000000000000000000000000000000000000000000000ac',
+            legacy_to_cashaddr('14p5cGy5DZmtNMQwTQiytBvxMVuTmFMSyU'))
 
         # uncompressed
-        T('410000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ac', '1QLFaVVt99p1y18zWSZnespzhkFxjwBbdP')
+        T('410000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ac',
+            legacy_to_cashaddr('1QLFaVVt99p1y18zWSZnespzhkFxjwBbdP'))
 
         # non-canonical encoding
-        T('4c21000000000000000000000000000000000000000000000000000000000000000000ac', '14p5cGy5DZmtNMQwTQiytBvxMVuTmFMSyU')
+        T('4c21000000000000000000000000000000000000000000000000000000000000000000ac',
+            legacy_to_cashaddr('14p5cGy5DZmtNMQwTQiytBvxMVuTmFMSyU'))
 
         # odd-lengths are *not* accepted
         with self.assertRaises(CBitcoinAddressError):
@@ -167,7 +176,7 @@ class Test_P2PKHBitcoinAddress(unittest.TestCase):
 
         def T(pubkey, expected_str_addr):
             addr = P2PKHBitcoinAddress.from_pubkey(pubkey)
-            self.assertEqual(str(addr), expected_str_addr)
+            self.assertEqual(str(addr), legacy_to_cashaddr(expected_str_addr))
 
         T(x('0378d430274f8c5ec1321338151e9f27f4c676a008bdf8638d07c0b6be9ab35c71'),
           '1C7zdTfnkzmr13HfA2vNm5SJYRK6nEKyq8')
@@ -188,9 +197,9 @@ class Test_P2PKHBitcoinAddress(unittest.TestCase):
             self.assertEqual(str(addr), expected_str_addr)
 
         T(x(''),
-          '1HT7xU2Ngenf7D4yocz2SAcnNLW7rK8d4E')
+          legacy_to_cashaddr('1HT7xU2Ngenf7D4yocz2SAcnNLW7rK8d4E'))
         T(x('0378d430274f8c5ec1321338151e9f27f4c676a008bdf8638d07c0b6be9ab35c72'),
-          '1L9V4NXbNtZsLjrD3nkU7gtEYLWRBWXLiZ')
+          legacy_to_cashaddr('1L9V4NXbNtZsLjrD3nkU7gtEYLWRBWXLiZ'))
 
         # With accept_invalid=False we should get CBitcoinAddressError's
         with self.assertRaises(CBitcoinAddressError):

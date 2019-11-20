@@ -13,11 +13,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import unittest
 
-from bitcoincash.wallet import CBitcoinSecret
+from bitcoincash.wallet import CBitcoinSecret, legacy_to_cashaddr
 from bitcoincash.signmessage import BitcoinMessage, VerifyMessage, SignMessage
 import sys
 import os
 import json
+
+tocashaddr = legacy_to_cashaddr
 
 _bchr = chr
 _bord = ord
@@ -39,12 +41,12 @@ class Test_SignVerifyMessage(unittest.TestCase):
 
         message = BitcoinMessage(message)
 
-        self.assertTrue(VerifyMessage(address, message, signature))
+        self.assertTrue(VerifyMessage(tocashaddr(address), message, signature))
 
     def test_verify_message_vectors(self):
         for vector in load_test_vectors('signmessage.json'):
             message = BitcoinMessage(vector['address'])
-            self.assertTrue(VerifyMessage(vector['address'], message, vector['signature']))
+            self.assertTrue(VerifyMessage(tocashaddr(vector['address']), message, vector['signature']))
 
     def test_sign_message_simple(self):
         key = CBitcoinSecret("L4vB5fomsK8L95wQ7GFzvErYGht49JsCPJyJMHpB4xGM6xgi2jvG")
@@ -55,7 +57,7 @@ class Test_SignVerifyMessage(unittest.TestCase):
         signature = SignMessage(key, message)
 
         self.assertTrue(signature)
-        self.assertTrue(VerifyMessage(address, message, signature))
+        self.assertTrue(VerifyMessage(tocashaddr(address), message, signature))
 
     def test_sign_message_vectors(self):
         for vector in load_test_vectors('signmessage.json'):
@@ -65,7 +67,7 @@ class Test_SignVerifyMessage(unittest.TestCase):
             signature = SignMessage(key, message)
 
             self.assertTrue(signature, "Failed to sign for [%s]" % vector['address'])
-            self.assertTrue(VerifyMessage(vector['address'], message, vector['signature']), "Failed to verify signature for [%s]" % vector['address'])
+            self.assertTrue(VerifyMessage(tocashaddr(vector['address']), message, vector['signature']), "Failed to verify signature for [%s]" % vector['address'])
 
 
 if __name__ == "__main__":

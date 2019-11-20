@@ -251,8 +251,10 @@ class CashAddrData(bytes):
         return '%s(%r)' % (self.__class__.__name__, str(self))
 
 __all__ = (
-        'encode',
+        'CashAddrData',
+        'PUBKEY_TYPE',
+        'SCRIPT_TYPE',
         'decode',
+        'encode',
         'encode_full',
-        'CashAddr',
 )
