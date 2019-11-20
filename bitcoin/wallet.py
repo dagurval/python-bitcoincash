@@ -245,11 +245,7 @@ class P2PKHBitcoinAddress(CBase58BitcoinAddress):
             except bitcoin.core.script.CScriptInvalidError:
                 raise CBitcoinAddressError('not a P2PKH scriptPubKey: script is invalid')
 
-        if scriptPubKey.is_witness_v0_keyhash():
-            return cls.from_bytes(scriptPubKey[2:22], bitcoin.params.BASE58_PREFIXES['PUBKEY_ADDR'])
-        elif scriptPubKey.is_witness_v0_nested_keyhash():
-            return cls.from_bytes(scriptPubKey[3:23], bitcoin.params.BASE58_PREFIXES['PUBKEY_ADDR'])
-        elif (len(scriptPubKey) == 25
+        if (len(scriptPubKey) == 25
                 and _bord(scriptPubKey[0])  == script.OP_DUP
                 and _bord(scriptPubKey[1])  == script.OP_HASH160
                 and _bord(scriptPubKey[2])  == 0x14
@@ -279,7 +275,7 @@ class P2PKHBitcoinAddress(CBase58BitcoinAddress):
 
         raise CBitcoinAddressError('not a P2PKH scriptPubKey')
 
-    def to_scriptPubKey(self, nested=False):
+    def to_scriptPubKey(self):
         """Convert an address to a scriptPubKey"""
         assert self.nVersion == bitcoin.params.BASE58_PREFIXES['PUBKEY_ADDR']
         return script.CScript([script.OP_DUP, script.OP_HASH160, self, script.OP_EQUALVERIFY, script.OP_CHECKSIG])

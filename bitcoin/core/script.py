@@ -24,16 +24,11 @@ if sys.version > '3':
     long = int
     _bchr = lambda x: bytes([x])
     _bord = lambda x: x
-    from io import BytesIO as _BytesIO
-else:
-    from cStringIO import StringIO as _BytesIO
 
 import struct
 
 import bitcoin.core
 import bitcoin.core._bignum
-
-from .serialize import *
 
 MAX_SCRIPT_SIZE = 10000
 MAX_SCRIPT_ELEMENT_SIZE = 520
@@ -677,45 +672,6 @@ class CScript(bytes):
                 _bord(self[1]) == 0x14 and
                 _bord(self[22]) == OP_EQUAL)
 
-    def is_witness_scriptpubkey(self):
-        """Returns true if this is a scriptpubkey signaling segregated witness data.
-
-        A witness program is any valid CScript that consists of a 1-byte push opcode
-        followed by a data push between 2 and 40 bytes.
-        """
-        size = len(self)
-        if size < 4 or size > 42:
-            return False
-
-        head = struct.unpack('<bb', self[:2])
-        if not CScriptOp(head[0]).is_small_int():
-            return False
-
-        if head[1] + 2 != size:
-            return False
-
-        return True
-
-    def witness_version(self):
-        """Returns the witness version on [0,16]. """
-        return next(iter(self))
-
-    def is_witness_v0_keyhash(self):
-        """Returns true if this is a scriptpubkey for V0 P2WPKH. """
-        return len(self) == 22 and self[0:2] == b'\x00\x14'
-
-    def is_witness_v0_nested_keyhash(self):
-        """Returns true if this is a scriptSig for V0 P2WPKH embedded in P2SH. """
-        return len(self) == 23 and self[0:3] == b'\x16\x00\x14'
-
-    def is_witness_v0_scripthash(self):
-        """Returns true if this is a scriptpubkey for V0 P2WSH. """
-        return len(self) == 34 and self[0:2] == b'\x00\x20'
-
-    def is_witness_v0_nested_scripthash(self):
-        """Returns true if this is a scriptSig for V0 P2WSH embedded in P2SH. """
-        return len(self) == 35 and self[0:3] == b'\x22\x00\x20'
-
     def is_push_only(self):
         """Test if the script only contains pushdata ops
 
@@ -816,38 +772,6 @@ class CScript(bytes):
                     n += 20
             lastOpcode = opcode
         return n
-
-class CScriptWitness(ImmutableSerializable):
-    """An encoding of the data elements on the initial stack for (segregated
-        witness)
-    """
-    __slots__ = ['stack']
-
-    def __init__(self, stack=()):
-        object.__setattr__(self, 'stack', stack)
-
-    def __len__(self):
-        return len(self.stack)
-
-    def __iter__(self):
-        return iter(self.stack)
-
-    def __repr__(self):
-        return 'CScriptWitness(' + ','.join("x('%s')" % bitcoin.core.b2x(s) for s in self.stack) + ')'
-
-    def is_null(self):
-        return len(self.stack) == 0
-
-    @classmethod
-    def stream_deserialize(cls, f):
-        n = VarIntSerializer.stream_deserialize(f)
-        stack = tuple(BytesSerializer.stream_deserialize(f) for i in range(n))
-        return cls(stack)
-
-    def stream_serialize(self, f):
-        VarIntSerializer.stream_serialize(len(self.stack), f)
-        for s in self.stack:
-            BytesSerializer.stream_serialize(s, f)
 
 
 SIGHASH_ALL = 1
@@ -970,67 +894,21 @@ def RawSignatureHash(script, txTo, inIdx, hashtype):
         txtmp.vin = []
         txtmp.vin.append(tmp)
 
-    txtmp.wit = bitcoin.core.CTxWitness()
     s = txtmp.serialize()
-    s += struct.pack(b"<i", hashtype)
+    s += struct.pack(b"<I", hashtype)
 
     hash = bitcoin.core.Hash(s)
 
     return (hash, None)
 
-SIGVERSION_BASE = 0
-SIGVERSION_WITNESS_V0 = 1
 
-def SignatureHash(script, txTo, inIdx, hashtype, amount=None, sigversion=SIGVERSION_BASE):
+def SignatureHash(script, txTo, inIdx, hashtype):
     """Calculate a signature hash
 
     'Cooked' version that checks if inIdx is out of bounds - this is *not*
     consensus-correct behavior, but is what you probably want for general
     wallet use.
     """
-
-    if sigversion == SIGVERSION_WITNESS_V0:
-        hashPrevouts = b'\x00'*32
-        hashSequence = b'\x00'*32
-        hashOutputs  = b'\x00'*32
-
-        if not (hashtype & SIGHASH_ANYONECANPAY):
-            serialize_prevouts = bytes()
-            for i in txTo.vin:
-                serialize_prevouts += i.prevout.serialize()
-            hashPrevouts = bitcoin.core.Hash(serialize_prevouts)
-
-        if (not (hashtype & SIGHASH_ANYONECANPAY) and (hashtype & 0x1f) != SIGHASH_SINGLE and (hashtype & 0x1f) != SIGHASH_NONE):
-            serialize_sequence = bytes()
-            for i in txTo.vin:
-                serialize_sequence += struct.pack("<I", i.nSequence)
-            hashSequence = bitcoin.core.Hash(serialize_sequence)
-
-        if ((hashtype & 0x1f) != SIGHASH_SINGLE and (hashtype & 0x1f) != SIGHASH_NONE):
-            serialize_outputs = bytes()
-            for o in txTo.vout:
-                serialize_outputs += o.serialize()
-            hashOutputs = bitcoin.core.Hash(serialize_outputs)
-        elif ((hashtype & 0x1f) == SIGHASH_SINGLE and inIdx < len(txTo.vout)):
-            serialize_outputs = txTo.vout[inIdx].serialize()
-            hashOutputs = bitcoin.core.Hash(serialize_outputs)
-
-        f = _BytesIO()
-        f.write(struct.pack("<i", txTo.nVersion))
-        f.write(hashPrevouts)
-        f.write(hashSequence)
-        txTo.vin[inIdx].prevout.stream_serialize(f)
-        BytesSerializer.stream_serialize(script, f)
-        f.write(struct.pack("<q", amount))
-        f.write(struct.pack("<I", txTo.vin[inIdx].nSequence))
-        f.write(hashOutputs)
-        f.write(struct.pack("<i", txTo.nLockTime))
-        f.write(struct.pack("<i", hashtype))
-
-        return bitcoin.core.Hash(f.getvalue())
-
-    assert not script.is_witness_scriptpubkey()
-
     (h, err) = RawSignatureHash(script, txTo, inIdx, hashtype)
     if err is not None:
         raise ValueError(err)
@@ -1170,7 +1048,6 @@ __all__ = (
         'CScriptInvalidError',
         'CScriptTruncatedPushDataError',
         'CScript',
-        'CScriptWitness',
         'SIGHASH_ALL',
         'SIGHASH_NONE',
         'SIGHASH_SINGLE',
@@ -1179,7 +1056,4 @@ __all__ = (
         'RawSignatureHash',
         'SignatureHash',
         'IsLowDERSignature',
-
-        'SIGVERSION_BASE',
-        'SIGVERSION_WITNESS_V0',
 )

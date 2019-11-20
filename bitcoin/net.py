@@ -76,8 +76,7 @@ class CInv(Serializable):
         0: "Error",
         1: "TX",
         2: "Block",
-        3: "FilteredBlock",
-        4: "CompactBlock"}
+        3: "FilteredBlock"}
 
     def __init__(self):
         self.type = 0
