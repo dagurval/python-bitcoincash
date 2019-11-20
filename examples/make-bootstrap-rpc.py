@@ -18,8 +18,8 @@ if sys.version_info.major < 3:
     sys.stderr.write('Sorry, Python 3.x required by this example.\n')
     sys.exit(1)
 
-import bitcoin
-import bitcoin.rpc
+import bitcoincash
+import bitcoincash.rpc
 
 import struct
 import sys
@@ -55,6 +55,6 @@ for i in range(n + 1):
              i, len(block_bytes)),
           file=sys.stderr)
 
-    fd.write(bitcoin.params.MESSAGE_START)
+    fd.write(bitcoincash.params.MESSAGE_START)
     fd.write(struct.pack('<i', len(block_bytes)))
     fd.write(block_bytes)

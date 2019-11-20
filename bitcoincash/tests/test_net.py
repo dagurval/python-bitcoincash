@@ -11,7 +11,7 @@
 
 import unittest
 
-from bitcoin.net import CAddress, CAlert, CUnsignedAlert, CInv
+from bitcoincash.net import CAddress, CAlert, CUnsignedAlert, CInv
 
 # Py3 compatibility
 import sys

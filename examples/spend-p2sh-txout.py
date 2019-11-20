@@ -20,11 +20,11 @@ if sys.version_info.major < 3:
 
 import hashlib
 
-from bitcoin import SelectParams
-from bitcoin.core import b2x, lx, COIN, COutPoint, CMutableTxOut, CMutableTxIn, CMutableTransaction, Hash160
-from bitcoin.core.script import CScript, OP_DUP, OP_HASH160, OP_EQUALVERIFY, OP_CHECKSIG, SignatureHash, SIGHASH_ALL
-from bitcoin.core.scripteval import VerifyScript, SCRIPT_VERIFY_P2SH
-from bitcoin.wallet import CBitcoinAddress, CBitcoinSecret
+from bitcoincash import SelectParams
+from bitcoincash.core import b2x, lx, COIN, COutPoint, CMutableTxOut, CMutableTxIn, CMutableTransaction, Hash160
+from bitcoincash.core.script import CScript, OP_DUP, OP_HASH160, OP_EQUALVERIFY, OP_CHECKSIG, SignatureHash, SIGHASH_ALL
+from bitcoincash.core.scripteval import VerifyScript, SCRIPT_VERIFY_P2SH
+from bitcoincash.wallet import CBitcoinAddress, CBitcoinSecret
 
 SelectParams('mainnet')
 
@@ -38,7 +38,7 @@ txin_redeemScript = CScript([seckey.pub, OP_CHECKSIG])
 print(b2x(txin_redeemScript))
 
 # Create the magic P2SH scriptPubKey format from that redeemScript. You should
-# look at the CScript.to_p2sh_scriptPubKey() function in bitcoin.core.script to
+# look at the CScript.to_p2sh_scriptPubKey() function in bitcoincash.core.script to
 # understand what's happening, as well as read BIP16:
 # https://github.com/bitcoin/bips/blob/master/bip-0016.mediawiki
 txin_scriptPubKey = txin_redeemScript.to_p2sh_scriptPubKey()

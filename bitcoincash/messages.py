@@ -30,10 +30,10 @@ else:
 
 # Bad practice, so we have a __all__ at the end; this should be cleaned up
 # later.
-from bitcoin.core import *
-from bitcoin.core.serialize import *
-from bitcoin.net import *
-import bitcoin
+from bitcoincash.core import *
+from bitcoincash.core.serialize import *
+from bitcoincash.net import *
+import bitcoincash
 
 MSG_TX = 1
 MSG_BLOCK = 2
@@ -55,7 +55,7 @@ class MsgSerializable(Serializable):
         f = _BytesIO()
         self.msg_ser(f)
         body = f.getvalue()
-        res = bitcoin.params.MESSAGE_START
+        res = bitcoincash.params.MESSAGE_START
         res += self.command
         res += b"\x00" * (12 - len(self.command))
         res += struct.pack(b"<I", len(body))
@@ -78,9 +78,9 @@ class MsgSerializable(Serializable):
         recvbuf = ser_read(f, 4 + 12 + 4 + 4)
 
         # check magic
-        if recvbuf[:4] != bitcoin.params.MESSAGE_START:
+        if recvbuf[:4] != bitcoincash.params.MESSAGE_START:
             raise ValueError("Invalid message start '%s', expected '%s'" %
-                             (b2x(recvbuf[:4]), b2x(bitcoin.params.MESSAGE_START)))
+                             (b2x(recvbuf[:4]), b2x(bitcoincash.params.MESSAGE_START)))
 
         # remaining header fields: command, msg length, checksum
         command = recvbuf[4:4+12].split(b"\x00", 1)[0]
@@ -121,8 +121,8 @@ class msg_version(MsgSerializable):
         self.addrTo = CAddress(PROTO_VERSION)
         self.addrFrom = CAddress(PROTO_VERSION)
         self.nNonce = random.getrandbits(64)
-        self.strSubVer = (b'/python-bitcoinlib:' +
-                          bitcoin.__version__.encode('ascii') + b'/')
+        self.strSubVer = (b'/python-bitcoincashlib:' +
+                          bitcoincash.__version__.encode('ascii') + b'/')
         self.nStartingHeight = -1
         self.fRelay = True
 
@@ -153,7 +153,7 @@ class msg_version(MsgSerializable):
         else:
             c.fRelay = True
         return c
- 
+
     def msg_ser(self, f):
         f.write(struct.pack(b"<i", self.nVersion))
         f.write(struct.pack(b"<Q", self.nServices))

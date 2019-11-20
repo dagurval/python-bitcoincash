@@ -14,10 +14,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import hashlib
 import unittest
 
-from bitcoin.core import b2x, x
-from bitcoin.core.script import CScript, IsLowDERSignature
-from bitcoin.core.key import CPubKey, is_libsec256k1_available, use_libsecp256k1_for_signing
-from bitcoin.wallet import *
+from bitcoincash.core import b2x, x
+from bitcoincash.core.script import CScript, IsLowDERSignature
+from bitcoincash.core.key import CPubKey, is_libsec256k1_available, use_libsecp256k1_for_signing
+from bitcoincash.wallet import *
 
 class Test_CBitcoinAddress(unittest.TestCase):
     def test_create_from_string(self):

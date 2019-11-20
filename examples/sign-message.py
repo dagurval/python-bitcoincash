@@ -13,8 +13,8 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from bitcoin.wallet import CBitcoinSecret, P2PKHBitcoinAddress
-from bitcoin.signmessage import BitcoinMessage, VerifyMessage, SignMessage
+from bitcoincash.wallet import CBitcoinSecret, P2PKHBitcoinAddress
+from bitcoincash.signmessage import BitcoinMessage, VerifyMessage, SignMessage
 
 def sign_message(key, msg):
     secret = CBitcoinSecret(key)

@@ -2,7 +2,7 @@
 `FakeBitcoinProxy` allows for unit testing of code that normally uses bitcoin
 RPC without requiring a running bitcoin node.
 
-`FakeBitcoinProxy` has an interface similar to `bitcoin.rpc.Proxy`, but does not
+`FakeBitcoinProxy` has an interface similar to `bitcoincash.rpc.Proxy`, but does not
 connect to a local bitcoin RPC node. Hence, `FakeBitcoinProxy` is similar to a
 mock for the RPC tests.
 
@@ -17,7 +17,7 @@ data.
 import random
 import hashlib
 
-from bitcoin.core import (
+from bitcoincash.core import (
     # bytes to hex (see x)
     b2x,
 
@@ -41,7 +41,7 @@ from bitcoin.core import (
     CTxIn,
 )
 
-from bitcoin.wallet import (
+from bitcoincash.wallet import (
     # bitcoin address initialized from base58-encoded string
     CBitcoinAddress,
 
@@ -127,7 +127,7 @@ class FakeBitcoinProxyException(Exception):
 
 class FakeBitcoinProxy(object):
     """
-    This is an alternative to using `bitcoin.rpc.Proxy` in tests. This class
+    This is an alternative to using `bitcoincash.rpc.Proxy` in tests. This class
     can store a number of blocks and transactions, which can then be retrieved
     by calling various "RPC" methods.
     """
@@ -155,7 +155,7 @@ class FakeBitcoinProxy(object):
     def _call(self, rpc_method_name, *args, **kwargs):
         """
         This represents a "raw" RPC call, which has output that
-        python-bitcoinlib does not parse.
+        python-bitcoincashlib does not parse.
         """
         method = getattr(self, rpc_method_name)
         return method(*args, **kwargs)
@@ -174,7 +174,7 @@ class FakeBitcoinProxy(object):
         """
 
         # Note that the actual "getblock" bitcoind RPC call from
-        # python-bitcoinlib returns a CBlock object, not a dictionary.
+        # python-bitcoincashlib returns a CBlock object, not a dictionary.
 
         if isinstance(blockhash, bytes):
             blockhash = b2lx(blockhash)
@@ -296,7 +296,7 @@ class FakeBitcoinProxy(object):
     def _batch(self, batch_request_entries):
         """
         Process a bunch of requests all at once. This mimics the _batch RPC
-        feature found in python-bitcoinlib and bitcoind RPC.
+        feature found in python-bitcoincashlib and bitcoind RPC.
         """
         necessary_keys = ["id", "version", "method", "params"]
 

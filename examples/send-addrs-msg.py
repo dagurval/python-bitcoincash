@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import socket, time, bitcoin
-from bitcoin.messages import msg_version, msg_verack, msg_addr
-from bitcoin.net import CAddress
+from bitcoincash.messages import msg_version, msg_verack, msg_addr
+from bitcoincash.net import CAddress
 
 
 PORT = 18333

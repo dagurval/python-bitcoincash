@@ -6,7 +6,7 @@ import unittest
 import random
 from copy import copy
 
-from bitcoin.core import (
+from bitcoincash.core import (
     # bytes to hex (see x)
     b2x,
 
@@ -30,12 +30,12 @@ from bitcoin.core import (
     CTxIn,
 )
 
-from bitcoin.wallet import (
+from bitcoincash.wallet import (
     # has a nifty function from_pubkey
     P2PKHBitcoinAddress,
 )
 
-from bitcoin.tests.fakebitcoinproxy import (
+from bitcoincash.tests.fakebitcoinproxy import (
     FakeBitcoinProxy,
     make_txout,
     make_blocks_from_blockhashes,

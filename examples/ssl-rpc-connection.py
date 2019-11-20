@@ -31,7 +31,7 @@
 # rpcsslprivatekeyfile=server.pem
 # rpcsslcertificatechainfile=server.cert
 
-import bitcoin.rpc
+import bitcoincash.rpc
 
 proxy_connection = bitcoin.rpc.Proxy()
 print(proxy_connection.getnewaddress())

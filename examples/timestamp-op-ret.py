@@ -19,12 +19,12 @@ if sys.version_info.major < 3:
     sys.exit(1)
 
 import hashlib
-import bitcoin.rpc
+import bitcoincash.rpc
 import sys
 
-from bitcoin import params
-from bitcoin.core import *
-from bitcoin.core.script import *
+from bitcoincash import params
+from bitcoincash.core import *
+from bitcoincash.core.script import *
 
 proxy = bitcoin.rpc.Proxy()
 

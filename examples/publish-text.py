@@ -39,10 +39,10 @@ import logging
 import sys
 import os
 
-import bitcoin.rpc
-from bitcoin.core import *
-from bitcoin.core.script import *
-from bitcoin.wallet import *
+import bitcoincash.rpc
+from bitcoincash.core import *
+from bitcoincash.core.script import *
+from bitcoincash.wallet import *
 
 parser = argparse.ArgumentParser(
         description="Publish text in the blockchain, suitably padded for easy recovery with strings",

@@ -13,7 +13,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import unittest
 
-from bitcoin.core import *
+from bitcoincash.core import *
 
 class Test_str_value(unittest.TestCase):
     def test(self):

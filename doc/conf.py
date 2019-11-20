@@ -11,9 +11,9 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-PROJECT = 'python-bitcoinlib'
-DESCRIPTION = 'The Swiss Army Knife of the Bitcoin protocol.'
-AUTHORS = 'The python-bitcoinlib developers'
+PROJECT = 'python-bitcoincashlib'
+DESCRIPTION = 'The Swiss Army Knife of the Bitcoin Cash protocol.'
+AUTHORS = 'The python-bitcoinlib developers; The python-bitcoincashlib developers'
 
 import sphinx
 import sys
@@ -24,7 +24,7 @@ import os
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('..'))
 
-from bitcoin import __version__
+from bitcoincash import __version__
 
 # Prevent loading openssl when generating API docs. Either the whole library or
 # the necessary elliptic curve might not be available, causing import to fail.
