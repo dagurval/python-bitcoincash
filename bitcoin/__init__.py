@@ -31,7 +31,6 @@ class MainParams(bitcoin.core.CoreMainParams):
     BASE58_PREFIXES = {'PUBKEY_ADDR':0,
                        'SCRIPT_ADDR':5,
                        'SECRET_KEY' :128}
-    BECH32_HRP = 'bc'
 
 class TestNetParams(bitcoin.core.CoreTestNetParams):
     MESSAGE_START = b'\x0b\x11\x09\x07'
@@ -44,7 +43,6 @@ class TestNetParams(bitcoin.core.CoreTestNetParams):
     BASE58_PREFIXES = {'PUBKEY_ADDR':111,
                        'SCRIPT_ADDR':196,
                        'SECRET_KEY' :239}
-    BECH32_HRP = 'tb'
 
 class RegTestParams(bitcoin.core.CoreRegTestParams):
     MESSAGE_START = b'\xfa\xbf\xb5\xda'
@@ -54,7 +52,6 @@ class RegTestParams(bitcoin.core.CoreRegTestParams):
     BASE58_PREFIXES = {'PUBKEY_ADDR':111,
                        'SCRIPT_ADDR':196,
                        'SECRET_KEY' :239}
-    BECH32_HRP = 'bcrt'
 
 """Master global setting for what chain params we're using.
 
