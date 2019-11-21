@@ -1,4 +1,16 @@
-# python-bitcoinlib release notes
+# python-bitcoincashlib release notes
+
+## v0.1.0
+
+* Remove segwit support
+* Remove bech32-addresses
+* Add cashaddr support
+* Replace base58-addresses (legacy addresses) with cashaddr
+* Bump max blocksize limit and update sigops limit
+* Update network magic bytes to Bitcoin Cash's
+* Python 2.x no longer supported.
+
+# python-bitcoinlib release notes (project we forked from)
 
 ## v0.10.2
 
