@@ -8,6 +8,7 @@
 * Replace base58-addresses (legacy addresses) with cashaddr
 * Bump max blocksize limit and update sigops limit
 * Update network magic bytes to Bitcoin Cash's
+* Update DNS seed lists
 * Python 2.x no longer supported.
 
 # python-bitcoinlib release notes (project we forked from)
