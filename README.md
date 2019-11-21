@@ -1,4 +1,4 @@
-# python-bitcoincashlib
+# python-bitcoincash
 
 This Python3 library provides an easy interface to the bitcoin data
 structures and protocol. The approach is low-level and "ground up", with a
@@ -31,6 +31,7 @@ Non-consensus critical modules include the following:
     bitcoincash          - Chain selection
     bitcoincash.base58   - Base58 encoding
     bitcoincash.bloom    - Bloom filters (incomplete)
+    bitcoincash.cashaddr - Cashaddr encoding
     bitcoincash.net      - Network communication (in flux)
     bitcoincash.messages - Network messages (in flux)
     bitcoincash.rpc      - Bitcoin Core RPC interface support
