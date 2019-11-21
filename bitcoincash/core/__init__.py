@@ -22,8 +22,13 @@ from .serialize import *
 
 # Core definitions
 COIN = 100000000
-MAX_BLOCK_SIZE = 1000000
-MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50
+MAX_BLOCK_SIZE = 32000000
+
+def max_block_sigops(blocksize):
+    return ((blocksize - 1) / 1000000 + 1) * 1000000 / 50
+
+MAX_TX_SIZE = 1000000
+MAX_TX_SIGOPS_COUNT = 20000
 
 def MoneyRange(nValue, params=None):
     global coreparams
@@ -601,7 +606,7 @@ def CheckTransaction(tx):
         raise CheckTransactionError("CheckTransaction() : vout empty")
 
     # Size limits
-    if len(tx.serialize()) > MAX_BLOCK_SIZE:
+    if len(tx.serialize()) > MAX_TX_SIZE:
         raise CheckTransactionError("CheckTransaction() : size limits failed")
 
     # Check for negative or overflow output values
@@ -631,7 +636,8 @@ def CheckTransaction(tx):
             if txin.prevout.is_null():
                 raise CheckTransactionError("CheckTransaction() : prevout is null")
 
-
+    if GetLegacySigOpCount(tx) > MAX_TX_SIGOPS_COUNT:
+        raise CheckTransactionError("CheckTransaction(): too many sigops in tx")
 
 
 
@@ -694,6 +700,8 @@ def GetLegacySigOpCount(tx):
 def CheckBlock(block, fCheckPoW = True, fCheckMerkleRoot = True, cur_time=None):
     """Context independent CBlock checks.
 
+    Assumes latest consensus rules with regards to block size and sigops count.
+
     CheckBlockHeader() is called first, which may raise a CheckBlockHeader
     exception, followed the block tests. CheckTransaction() is called for every
     transaction.
@@ -708,10 +716,11 @@ def CheckBlock(block, fCheckPoW = True, fCheckMerkleRoot = True, cur_time=None):
     # Block header checks
     CheckBlockHeader(block.get_header(), fCheckPoW=fCheckPoW, cur_time=cur_time)
 
+    blocksize = len(block.serialize())
     # Size limits
     if not block.vtx:
         raise CheckBlockError("CheckBlock() : vtx empty")
-    if len(block.serialize()) > MAX_BLOCK_SIZE:
+    if blocksize > MAX_BLOCK_SIZE:
         raise CheckBlockError("CheckBlock() : block larger than MAX_BLOCK_SIZE")
 
     # First transaction must be coinbase
@@ -737,7 +746,7 @@ def CheckBlock(block, fCheckPoW = True, fCheckMerkleRoot = True, cur_time=None):
         unique_txids.add(txid)
 
         nSigOps += GetLegacySigOpCount(tx)
-        if nSigOps > MAX_BLOCK_SIGOPS:
+        if nSigOps > max_block_sigops(blocksize):
             raise CheckBlockError("CheckBlock() : out-of-bounds SigOpCount")
 
     # Check merkle root
@@ -745,39 +754,41 @@ def CheckBlock(block, fCheckPoW = True, fCheckMerkleRoot = True, cur_time=None):
         raise CheckBlockError("CheckBlock() : hashMerkleRoot mismatch")
 
 __all__ = (
-        'Hash',
-        'Hash160',
-        'COIN',
-        'MAX_BLOCK_SIZE',
-        'MAX_BLOCK_SIGOPS',
-        'MoneyRange',
-        'x',
-        'b2x',
-        'lx',
-        'b2lx',
-        'str_money_value',
-        'ValidationError',
-        'COutPoint',
-        'CMutableOutPoint',
-        'CTxIn',
-        'CMutableTxIn',
-        'CTxOut',
-        'CMutableTxOut',
-        'CTransaction',
-        'CMutableTransaction',
-        'CBlockHeader',
         'CBlock',
+        'CBlockHeader',
+        'CMutableOutPoint',
+        'CMutableTransaction',
+        'CMutableTxIn',
+        'CMutableTxOut',
+        'COIN',
+        'COutPoint',
+        'CTransaction',
+        'CTxIn',
+        'CTxOut',
+        'CheckBlock',
+        'CheckBlockError',
+        'CheckBlockHeader',
+        'CheckBlockHeaderError',
+        'CheckProofOfWork',
+        'CheckProofOfWorkError',
+        'CheckTransaction',
+        'CheckTransactionError',
         'CoreChainParams',
         'CoreMainParams',
-        'CoreTestNetParams',
         'CoreRegTestParams',
-        'CheckTransactionError',
-        'CheckTransaction',
-        'CheckBlockHeaderError',
-        'CheckProofOfWorkError',
-        'CheckProofOfWork',
-        'CheckBlockHeader',
-        'CheckBlockError',
+        'CoreTestNetParams',
         'GetLegacySigOpCount',
-        'CheckBlock',
+        'Hash',
+        'Hash160',
+        'MAX_BLOCK_SIZE',
+        'MAX_TX_SIGOPS_COUNT',
+        'MAX_TX_SIZE',
+        'MoneyRange',
+        'ValidationError',
+        'b2lx',
+        'b2x',
+        'lx',
+        'max_block_sigops',
+        'str_money_value',
+        'x',
 )
