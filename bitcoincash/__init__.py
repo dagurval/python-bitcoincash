@@ -19,7 +19,14 @@ import bitcoincash.core
 __version__ = '0.11.0dev'
 
 class MainParams(bitcoincash.core.CoreMainParams):
-    MESSAGE_START = b'\xf9\xbe\xb4\xd9'
+    """
+    DB_MAGIC: Magic bytes used as separator in block storage. Previously named
+              MESSAGE_START.
+    NETWORK_MAGIC: Prefix for messages in the P2P protocol. Previously named
+                   MESSAGE_START and had the same value as DB_MAGIC.
+    """
+    DB_MAGIC = b'\xf9\xbe\xb4\xd9'
+    NETWORK_MAGIC = b'\xe3\xe1\xf3\xe8'
     DEFAULT_PORT = 8333
     RPC_PORT = 8332
     DNS_SEEDS = (('bitcoin.sipa.be', 'seed.bitcoin.sipa.be'),
@@ -34,7 +41,14 @@ class MainParams(bitcoincash.core.CoreMainParams):
     CASHADDR_PREFIX = "bitcoincash"
 
 class TestNetParams(bitcoincash.core.CoreTestNetParams):
-    MESSAGE_START = b'\x0b\x11\x09\x07'
+    """
+    DB_MAGIC: Magic bytes used as separator in block storage. Previously named
+              MESSAGE_START.
+    NETWORK_MAGIC: Prefix for messages in the P2P protocol. Previously named
+                   MESSAGE_START and had the same value as DB_MAGIC.
+    """
+    DB_MAGIC = b'\x0b\x11\x09\x07'
+    NETWORK_MAGIC = b'\xf4\xe5\xf3\xf4'
     DEFAULT_PORT = 18333
     RPC_PORT = 18332
     DNS_SEEDS = (('testnetbitcoin.jonasschnelli.ch', 'testnet-seed.bitcoin.jonasschnelli.ch'),
@@ -47,7 +61,14 @@ class TestNetParams(bitcoincash.core.CoreTestNetParams):
     CASHADDR_PREFIX = "bchtest"
 
 class RegTestParams(bitcoincash.core.CoreRegTestParams):
-    MESSAGE_START = b'\xfa\xbf\xb5\xda'
+    """
+    DB_MAGIC: Magic bytes used as separator in block storage. Previously named
+              MESSAGE_START.
+    NETWORK_MAGIC: Prefix for messages in the P2P protocol. Previously named
+                   MESSAGE_START and had the same value as DB_MAGIC.
+    """
+    DB_MAGIC = b'\xfa\xbf\xb5\xda'
+    NETWORK_MAGIC = b'\xda\xb5\xbf\xfa'
     DEFAULT_PORT = 18444
     RPC_PORT = 18443
     DNS_SEEDS = ()

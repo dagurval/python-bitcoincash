@@ -55,7 +55,7 @@ class MsgSerializable(Serializable):
         f = _BytesIO()
         self.msg_ser(f)
         body = f.getvalue()
-        res = bitcoincash.params.MESSAGE_START
+        res = bitcoincash.params.NETWORK_MAGIC
         res += self.command
         res += b"\x00" * (12 - len(self.command))
         res += struct.pack(b"<I", len(body))
@@ -78,9 +78,9 @@ class MsgSerializable(Serializable):
         recvbuf = ser_read(f, 4 + 12 + 4 + 4)
 
         # check magic
-        if recvbuf[:4] != bitcoincash.params.MESSAGE_START:
+        if recvbuf[:4] != bitcoincash.params.NETWORK_MAGIC:
             raise ValueError("Invalid message start '%s', expected '%s'" %
-                             (b2x(recvbuf[:4]), b2x(bitcoincash.params.MESSAGE_START)))
+                             (b2x(recvbuf[:4]), b2x(bitcoincash.params.NETWORK_MAGIC)))
 
         # remaining header fields: command, msg length, checksum
         command = recvbuf[4:4+12].split(b"\x00", 1)[0]

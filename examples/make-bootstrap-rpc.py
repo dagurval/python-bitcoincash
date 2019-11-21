@@ -55,6 +55,6 @@ for i in range(n + 1):
              i, len(block_bytes)),
           file=sys.stderr)
 
-    fd.write(bitcoincash.params.MESSAGE_START)
+    fd.write(bitcoincash.params.DISK_MAGIC)
     fd.write(struct.pack('<i', len(block_bytes)))
     fd.write(block_bytes)
