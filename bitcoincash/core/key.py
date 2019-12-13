@@ -16,7 +16,6 @@ WARNING: This module does not mlock() secrets; your private keys may end up on
 disk in swap! Use with caution!
 """
 import ctypes
-import ctypes.util
 import hashlib
 import sys
 from os import urandom
@@ -31,9 +30,16 @@ if sys.version > '3':
 
 import bitcoincash.core.script
 
-_ssl = ctypes.cdll.LoadLibrary(ctypes.util.find_library('ssl') or 'libeay32')
+def _find_lib(lib):
+    try:
+        import ctypes.util
+        return ctypes.util.find_library(lib)
+    except:
+        return None
 
-_libsecp256k1_path = ctypes.util.find_library('secp256k1')
+_ssl = ctypes.cdll.LoadLibrary(_find_lib('ssl') or 'libeay32')
+
+_libsecp256k1_path = _find_lib('secp256k1')
 _libsecp256k1_enable_signing = False
 _libsecp256k1_context = None
 _libsecp256k1 = None

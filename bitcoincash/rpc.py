@@ -377,6 +377,7 @@ class Proxy(BaseProxy):
         {'tx':        Resulting tx,
          'fee':       Fee the resulting transaction pays,
          'changepos': Position of added change output, or -1,
+
         }
         """
         hextx = hexlify(tx.serialize())
