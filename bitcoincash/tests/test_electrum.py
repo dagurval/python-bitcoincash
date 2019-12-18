@@ -8,7 +8,7 @@ def skip_unless_enabled():
     if 'ELECTRUM_TESTS' in os.environ and os.environ['ELECTRUM_TESTS']:
            return
 
-    raise unittest.SkipTest("Electrum tests disabled. Set ELECTRUM_TEST env variable to enable")
+    raise unittest.SkipTest("Electrum tests disabled. Set ELECTRUM_TESTS env variable to enable")
 
 class TestElectrum(unittest.TestCase):
     def test_basic_rpc(self):
