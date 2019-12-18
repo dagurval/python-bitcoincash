@@ -177,28 +177,6 @@ class KnownServers(dict):
                 nn = ServerInfo.from_dict(row)
                 self[str(nn)] = nn
 
-    def from_irc(self, irc_nickname=None, irc_password=None):
-        '''
-            Connect to the IRC channel and find all servers presently connected.
-
-            Slow; takes 30+ seconds but authoritative and current.
-
-            OBSOLETE.
-        '''
-        if have_bottom:
-            from .findall import IrcListener
-
-            # connect and fetch current set of servers who are
-            # on #electrum channel at freenode
-
-            bot = IrcListener(irc_nickname=irc_nickname, irc_password=irc_password)
-            results = bot.loop.run_until_complete(bot.collect_data())
-            bot.loop.close()
-
-            # merge by nick name
-            self.update(results)
-        else:
-            return(False)
 
     def add_single(self, hostname, ports, nickname=None, **kws):
         '''
@@ -264,8 +242,6 @@ if __name__ == '__main__':
     ks = KnownServers()
 
     #ks.from_json('servers.json')
-    ks.from_irc()
-
     #print (ks.dump())
 
     from constants import PROTOCOL_CODES
