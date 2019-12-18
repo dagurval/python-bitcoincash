@@ -18,6 +18,7 @@ Contents:
 
    bitcoincash
    bitcoincash.core
+   bitcoincash.electrum
 
 
 Indices and tables

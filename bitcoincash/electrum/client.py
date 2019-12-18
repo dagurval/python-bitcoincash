@@ -288,6 +288,7 @@ class StratumClient:
 
             Expects a method name, which look like:
                 server.peers.subscribe
+
             .. and sometimes take arguments, all of which are positional.
 
             Returns a tuple: (Future, asyncio.Queue).
