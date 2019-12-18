@@ -33,9 +33,10 @@ Non-consensus critical modules include the following:
     bitcoincash.base58   - Base58 encoding
     bitcoincash.bloom    - Bloom filters (incomplete)
     bitcoincash.cashaddr - Cashaddr encoding
+    bitcoincash.electrum - Bitcoin Electrum RPC interface support
     bitcoincash.net      - Network communication (in flux)
     bitcoincash.messages - Network messages (in flux)
-    bitcoincash.rpc      - Bitcoin Core RPC interface support
+    bitcoincash.rpc      - Bitcoin Satoshi-client RPC interface support
     bitcoincash.wallet   - Wallet-related code, currently Bitcoin address and
                            private key support
 
