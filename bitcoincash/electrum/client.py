@@ -62,6 +62,10 @@ class StratumClient:
             self.protocol = None
         if self.ka_task:
             self.ka_task.cancel()
+            try:
+                self.loop.run_until_complete(self.ka_task)
+            except asyncio.CancelledError:
+                pass
             self.ka_task = None
 
 
@@ -162,17 +166,14 @@ class StratumClient:
 
     async def _keepalive(self):
         '''
-            Keep our connect to server alive forever, with some 
+            Keep our connect to server alive forever, with some
             pointless traffic.
         '''
         while self.protocol:
             vers = await self.RPC('server.version')
             logger.debug("Server version: " + repr(vers))
 
-            # Five minutes isn't really enough anymore; looks like
-            # servers are killing 2-minute old idle connections now.
-            # But decreasing interval this seems rude.
-            await asyncio.sleep(600)
+            await asyncio.sleep(100)
 
 
     def _send_request(self, method, params=[], is_subscribe = False):
