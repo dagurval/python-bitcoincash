@@ -23,7 +23,7 @@ class TestElectrum(unittest.TestCase):
                 "f9acfe3f0e98fc321123f787e21e17984998f46866d30244328bf7552051d57a",
                 b2lx(header.hashMerkleRoot))
 
-        cli.close()
+        loop.run_until_complete(cli.close())
         loop.close()
 
 if __name__ == '__main__':

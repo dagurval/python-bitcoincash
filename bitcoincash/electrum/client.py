@@ -57,16 +57,16 @@ class StratumClient:
             self.ka_task.cancel()
             self.ka_task = None
 
-    def close(self):
+    async def close(self):
         if self.protocol:
             self.protocol.close()
             # give the transport a moment to close
-            self.loop.run_until_complete(asyncio.sleep(0.1))
+            await asyncio.sleep(0.1)
             self.protocol = None
         if self.ka_task:
             self.ka_task.cancel()
             try:
-                self.loop.run_until_complete(self.ka_task)
+                await self.ka_task
             except asyncio.CancelledError:
                 pass
             self.ka_task = None
@@ -315,7 +315,7 @@ if __name__ == '__main__':
 
     rv = loop.run_until_complete(c.RPC('server.peers.subscribe'))
     print("DONE!: this server has %d peers" % len(rv))
-    c.close()
+    loop.run_until_complete(c.close())
     loop.close()
 
 
