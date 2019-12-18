@@ -1,4 +1,8 @@
-
 from .exc import ElectrumErrorResponse
+from .client import StratumClient
+class Electrum(StratumClient):
+    pass
 
-__version__ = '0.7.4'
+__all__ = (
+    'Electrum',
+)

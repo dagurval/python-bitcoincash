@@ -5,7 +5,8 @@
 # Runtime check for optional modules
 from importlib import util as importutil
 import json, warnings, asyncio, ssl
-from protocol import StratumProtocol
+from .protocol import StratumProtocol
+from .svr_info import ServerInfo
 
 # Check if aiosocks is present, and load it if it is.
 if importutil.find_spec("aiosocks") is not None:
@@ -15,7 +16,7 @@ else:
     have_aiosocks = False
 
 from collections import defaultdict
-from exc import ElectrumErrorResponse
+from .exc import ElectrumErrorResponse
 import logging
 
 logger = logging.getLogger(__name__)
@@ -59,6 +60,8 @@ class StratumClient:
     def close(self):
         if self.protocol:
             self.protocol.close()
+            # give the transport a moment to close
+            self.loop.run_until_complete(asyncio.sleep(0.1))
             self.protocol = None
         if self.ka_task:
             self.ka_task.cancel()

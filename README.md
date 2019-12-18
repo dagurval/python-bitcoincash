@@ -96,6 +96,12 @@ Under bitcoincash/tests using test data from Bitcoin Unlimited. To run them:
 
     python3 -m unittest discover
 
+To also enable electrum tests (these connect to a remote server), set the
+`ELECTRUM_TESTS` env variable
+
+    ELECTRUM_TESTS=1 python3 -m unittest discover
+
+
 Alternately, if Tox (see https://tox.readthedocs.org/) is available on your
 system, you can run unit tests for multiple Python versions:
 
