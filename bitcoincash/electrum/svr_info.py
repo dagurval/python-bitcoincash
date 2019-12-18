@@ -12,7 +12,7 @@ else:
     have_bottom = False
 
 import time, random, json
-from .constants import DEFAULT_PORTS
+from constants import DEFAULT_PORTS
 
 
 class ServerInfo(dict):
@@ -96,6 +96,13 @@ class ServerInfo(dict):
         rv.update(d)
         return rv
 
+    @classmethod
+    def from_default(cls):
+        from constants import DEFAULT_SERVER, BOOTSTRAP_SERVERS
+        return cls(
+            DEFAULT_SERVER,
+            DEFAULT_SERVER,
+            BOOTSTRAP_SERVERS[DEFAULT_SERVER])
 
     @property
     def protocols(self):

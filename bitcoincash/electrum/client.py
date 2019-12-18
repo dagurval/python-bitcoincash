@@ -5,7 +5,7 @@
 # Runtime check for optional modules
 from importlib import util as importutil
 import json, warnings, asyncio, ssl
-from .protocol import StratumProtocol
+from protocol import StratumProtocol
 
 # Check if aiosocks is present, and load it if it is.
 if importutil.find_spec("aiosocks") is not None:
@@ -15,7 +15,7 @@ else:
     have_aiosocks = False
 
 from collections import defaultdict
-from .exc import ElectrumErrorResponse
+from exc import ElectrumErrorResponse
 import logging
 
 logger = logging.getLogger(__name__)
@@ -63,15 +63,17 @@ class StratumClient:
         if self.ka_task:
             self.ka_task.cancel()
             self.ka_task = None
-            
 
-    async def connect(self, server_info, proto_code=None, *,
+
+    async def connect(self, server_info=None, proto_code=None, *,
                             use_tor=False, disable_cert_verify=False,
                             proxy=None, short_term=False):
         '''
             Start connection process.
             Destination must be specified in a ServerInfo() record (first arg).
         '''
+        if server_info is None:
+            server_info = ServerInfo.from_default()
         self.server_info = server_info
         if not proto_code:
              proto_code,*_ = server_info.protocols
@@ -82,7 +84,7 @@ class StratumClient:
         if proto_code == 'g':       # websocket
             # to do this, we'll need a websockets implementation that
             # operates more like a asyncio.Transport
-            # maybe: `asyncws` or `aiohttp` 
+            # maybe: `asyncws` or `aiohttp`
             raise NotImplementedError('sorry no WebSocket transport yet')
 
         hostname, port, use_ssl = server_info.get_port(proto_code)
@@ -110,7 +112,7 @@ class StratumClient:
 
         if use_ssl == True and disable_cert_verify:
             # Create a more liberal SSL context that won't
-            # object to self-signed certicates. This is 
+            # object to self-signed certicates. This is
             # very bad on public Internet, but probably ok
             # over Tor
             use_ssl = ssl.create_default_context()
@@ -242,7 +244,7 @@ class StratumClient:
         result = msg.get('result')
 
         # fetch and forget about the request
-        inf = self.inflight.pop(resp_id) 
+        inf = self.inflight.pop(resp_id)
         if not inf:
             logger.error("Incoming server message had unknown ID in it: %s" % resp_id)
             return
@@ -252,7 +254,7 @@ class StratumClient:
 
         if 'error' in msg:
             err = msg['error']
-            
+
             logger.info("Error response: '%s'" % err)
             rv.set_exception(ElectrumErrorResponse(err, req))
 
@@ -268,7 +270,7 @@ class StratumClient:
                 blockchain.address.get_balance
 
             .. and sometimes take arguments, all of which are positional.
-    
+
             Returns a future which will you should await for
             the result from the server. Failures are returned as exceptions.
         '''
@@ -283,7 +285,7 @@ class StratumClient:
             Expects a method name, which look like:
                 server.peers.subscribe
             .. and sometimes take arguments, all of which are positional.
-    
+
             Returns a tuple: (Future, asyncio.Queue).
             The future will have the result of the initial
             call, and the queue will receive additional
@@ -292,10 +294,10 @@ class StratumClient:
         assert '.' in method
         assert method.endswith('subscribe')
         return self._send_request(method, params, is_subscribe=True)
-        
+
 
 if __name__ == '__main__':
-    from transport import SocketTransport
+    #from transport import SocketTransport
     from svr_info import KnownServers, ServerInfo
 
     logging.basicConfig(format="%(asctime)-11s %(message)s", datefmt="[%d/%m/%Y-%H:%M:%S]")
@@ -303,28 +305,12 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
 
-    proto_code = 's'
-
-    if 0:
-        ks = KnownServers()
-        ks.from_json('servers.json')
-        which = ks.select(proto_code, is_onion=True, min_prune=1000)[0]
-    else:
-        which = ServerInfo({
-            "seen_at": 1465686119.022801,
-            "ports": "t s",
-            "nickname": "dunp",
-            "pruning_limit": 10000,
-            "version": "1.0",
-            "hostname": "erbium1.sytes.net" })
-
     c = StratumClient(loop=loop)
+    loop.run_until_complete(c.connect())
 
-    loop.run_until_complete(c.connect(which, proto_code, disable_cert_verify=True, use_tor=True))
-    
     rv = loop.run_until_complete(c.RPC('server.peers.subscribe'))
     print("DONE!: this server has %d peers" % len(rv))
+    c.close()
     loop.close()
 
-    #c.blockchain.address.get_balance(23)
 

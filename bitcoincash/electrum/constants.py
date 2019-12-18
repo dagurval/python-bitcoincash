@@ -12,6 +12,11 @@ PROTOCOL_CODES = dict(t='TCP (plaintext)', h='HTTP (plaintext)', s='SSL', g='Web
 #
 DEFAULT_PORTS = { 't':50001, 's':50002, 'h':8081, 'g':8082}
 
+"""
+If server info is not provided, default to this one
+"""
+DEFAULT_SERVER = 'bitcoincash.network'
+
 BOOTSTRAP_SERVERS = {
     '7nshufncf3nmp7pa42oqhnj6whsjgo2eok4jveex62tczuhvqur5ciad.onion': {   't': '50001'},
     'bch.imaginary.cash': {'s': '50002', 't': '50001'},
