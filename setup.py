@@ -12,6 +12,7 @@ with open(os.path.join(here, 'README.md')) as f:
 requires = []
 
 setup(name='bitcoincash',
+      python_requires='>3.5.6',
       version=__version__,
       description='The Swiss Army Knife of the Bitcoin Cash protocol.',
       long_description=README,
