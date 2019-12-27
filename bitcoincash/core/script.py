@@ -29,6 +29,7 @@ import struct
 
 import bitcoincash.core
 import bitcoincash.core._bignum
+from bitcoincash.core.serialize import uint256_from_str, uint256_to_str, ser_string
 
 MAX_SCRIPT_SIZE = 10000
 MAX_SCRIPT_ELEMENT_SIZE = 520
@@ -899,7 +900,7 @@ def RawSignatureHashLegacy(script, txTo, inIdx, hashtype):
         txtmp.vin.append(tmp)
 
     s = txtmp.serialize()
-    s += struct.pack(b"<I", hashtype)
+    s += struct.pack(b"<i", hashtype)
 
     hash = bitcoincash.core.Hash(s)
 
@@ -951,6 +952,12 @@ def SignatureHash(script, txTo, inIdx, hashtype, amount, *,
     hashSequence = 0
     hashOutputs = 0
 
+    def hash256(x):
+        import hashlib
+        sha256 = lambda s: hashlib.new('sha256', s).digest()
+        return sha256(sha256(x))
+
+
     if not (hashtype & SIGHASH_ANYONECANPAY):
         serialize_prevouts = bytes()
         for i in txTo.vin:
@@ -974,15 +981,15 @@ def SignatureHash(script, txTo, inIdx, hashtype, amount, *,
 
     ss = bytes()
     ss += struct.pack("<i", txTo.nVersion)
-    ss += ser_uint256(hashPrevouts)
-    ss += ser_uint256(hashSequence)
+    ss += uint256_to_str(hashPrevouts)
+    ss += uint256_to_str(hashSequence)
     ss += txTo.vin[inIdx].prevout.serialize()
     ss += ser_string(script)
     ss += struct.pack("<q", amount)
     ss += struct.pack("<I", txTo.vin[inIdx].nSequence)
-    ss += ser_uint256(hashOutputs)
-    ss += struct.pack("<i", txTo.nLockTime)
-    ss += struct.pack("<I", hashtype)
+    ss += uint256_to_str(hashOutputs)
+    ss += struct.pack("<I", txTo.nLockTime)
+    ss += struct.pack("<i", hashtype)
 
     return hash256(ss)
 

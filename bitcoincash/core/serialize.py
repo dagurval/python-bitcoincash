@@ -356,6 +356,35 @@ def uint256_to_shortstr(u):
     s = "%064x" % (u,)
     return s[:16]
 
+def ser_compact_size(l):
+    r = b""
+    if l < 253:
+        r = struct.pack("B", l)
+    elif l < 0x10000:
+        r = struct.pack("<BH", 253, l)
+    elif l < 0x100000000:
+        r = struct.pack("<BI", 254, l)
+    else:
+        r = struct.pack("<BQ", 255, l)
+    return r
+
+def deser_compact_size(f):
+    nit = struct.unpack("<B", f.read(1))[0]
+    if nit == 253:
+        nit = struct.unpack("<H", f.read(2))[0]
+    elif nit == 254:
+        nit = struct.unpack("<I", f.read(4))[0]
+    elif nit == 255:
+        nit = struct.unpack("<Q", f.read(8))[0]
+    return nit
+
+def deser_string(f):
+    nit = deser_compact_size(f)
+    return f.read(nit)
+
+def ser_string(s):
+    return ser_compact_size(len(s)) + s
+
 __all__ = (
         'MAX_SIZE',
         'Hash',
@@ -378,4 +407,8 @@ __all__ = (
         'compact_from_uint256',
         'uint256_to_str',
         'uint256_to_shortstr',
+        'ser_compact_size',
+        'deser_compact_size',
+        'deser_string',
+        'deser_compact_size'
 )
