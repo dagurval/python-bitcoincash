@@ -9,11 +9,10 @@ from .. import schnorr
 
 import hashlib
 import secrets
-from ..bitcoin import regenerate_key
 
 class TestSchnorr(unittest.TestCase):
 
-    def do_it(self):
+    def test_schnorr(self):
         ''' Test Schnorr implementation.
         Duplicate the deterministic sig test from Bitcoin ABC's
         src/test/key_tests.cpp '''
@@ -39,24 +38,13 @@ class TestSchnorr(unittest.TestCase):
 
         self.assertTrue(schnorr.verify(pubkey, sig, msghash))
 
-    def test_schnorr(self):
-        saved = (schnorr._secp256k1_schnorr_sign, schnorr._secp256k1_schnorr_verify)
-        slow = (None, None)
-        schnorr._secp256k1_schnorr_sign, schnorr._secp256k1_schnorr_verify = slow # clear the ctypes function to force slow
-
-        self.do_it()
-
-        if slow != saved:
-            # swap back, do it fast
-            schnorr._secp256k1_schnorr_sign, schnorr._secp256k1_schnorr_verify = saved
-            self.do_it()
-
 class TestBlind(unittest.TestCase):
 
-    def do_it(self):
+    def test_blind(self):
+        from bitcoincash.wallet import CBitcoinSecret
         # signer
         privkey = secrets.token_bytes(32)
-        pubkey = regenerate_key(privkey).GetPubKey(True)
+        pubkey = CBitcoinSecret.from_secret_bytes(privkey).pub
         signer = schnorr.BlindSigner()
         R = signer.get_R()
 
@@ -77,19 +65,6 @@ class TestBlind(unittest.TestCase):
         s_bad[-1] = (s_bad[-1] + 1) % 256
         with self.assertRaises(RuntimeError):
             signature = requester.finalize(s_bad)
-
-    def test_fast(self):
-        if not schnorr.seclib:
-            self.skipTest("accelerated ECC library not available")
-        self.do_it()
-
-    def test_slow(self):
-        saved = schnorr.seclib
-        schnorr.seclib = None
-        try:
-            self.do_it()
-        finally:
-            schnorr.seclib = saved
 
     def test_jacobi(self):
         """ test the faster jacobi implementation against ecdsa package"""
