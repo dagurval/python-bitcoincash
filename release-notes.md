@@ -1,5 +1,11 @@
 # python-bitcoincashlib release notes
 
+## v0.1.5
+- Add Bitcoin Cash signature hash algorithm
+
+## v0.1.4
+- Add electrum support
+
 ## v0.1.0
 
 * Remove segwit support

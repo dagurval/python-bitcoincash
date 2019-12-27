@@ -921,7 +921,31 @@ def SignatureHashLegacy(script, txTo, inIdx, hashtype):
         raise ValueError(err)
     return h
 
-def SignatureHashForkId(script, txTo, inIdx, hashtype, amount):
+def SignatureHash(script, txTo, inIdx, hashtype, amount, *,
+        legacy_allow = False, legacy_raw = False):
+    """Calculate a signature hash
+
+    legacy_allow - Allow hashing using the pre-fork signature hash algorithm
+
+    legacy_raw - Don't use the 'Cooked' version that checks if inIdx is out
+                 of bounds.
+    """
+
+    if not SIGHASH_FORKID & hashtype:
+        if not legacy_allow:
+            raise ValueError(
+                "SignatureHash expects SIGHASH_FORKID flag. "
+                "If you really want to hash with the old signature hash "
+                "algoritm, set legacy_allow=True")
+        elif legacy_raw:
+            (h, _) = RawSignatureHashLegacy(script, txTo, inIdx, hashtype)
+            return h
+        else:
+            return SignatureHashLegacy(script, txTo, inIdx, hashtype)
+
+    if amount is None:
+        raise ValueError("Cannot hash with new signature hash algorithm when "
+                "amount is None")
 
     hashPrevouts = 0
     hashSequence = 0
@@ -1103,5 +1127,6 @@ __all__ = (
         'FindAndDelete',
         'RawSignatureHashLegacy',
         'SignatureHashLegacy',
+        'SignatureHash',
         'IsLowDERSignature',
 )
