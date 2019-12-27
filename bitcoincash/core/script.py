@@ -848,8 +848,11 @@ def CompareBigEndian(c1, c2):
     return 0
 
 
-def RawSignatureHash(script, txTo, inIdx, hashtype):
+def RawSignatureHashLegacy(script, txTo, inIdx, hashtype):
     """Consensus-correct SignatureHash
+
+    This is the old signature hash algorithm, before the Bitcoin Cash split
+    in 2017.
 
     Returns (hash, err) to precisely match the consensus-critical behavior of
     the SIGHASH_SINGLE bug. (inIdx is *not* checked for validity)
@@ -902,14 +905,17 @@ def RawSignatureHash(script, txTo, inIdx, hashtype):
     return (hash, None)
 
 
-def SignatureHash(script, txTo, inIdx, hashtype):
+def SignatureHashLegacy(script, txTo, inIdx, hashtype):
     """Calculate a signature hash
+
+    This is the old signature hash algorithm, before the Bitcoin Cash split
+    in 2017.
 
     'Cooked' version that checks if inIdx is out of bounds - this is *not*
     consensus-correct behavior, but is what you probably want for general
     wallet use.
     """
-    (h, err) = RawSignatureHash(script, txTo, inIdx, hashtype)
+    (h, err) = RawSignatureHashLegacy(script, txTo, inIdx, hashtype)
     if err is not None:
         raise ValueError(err)
     return h
@@ -1053,7 +1059,7 @@ __all__ = (
         'SIGHASH_SINGLE',
         'SIGHASH_ANYONECANPAY',
         'FindAndDelete',
-        'RawSignatureHash',
-        'SignatureHash',
+        'RawSignatureHashLegacy',
+        'SignatureHashLegacy',
         'IsLowDERSignature',
 )
