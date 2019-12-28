@@ -5,7 +5,7 @@
 # Part of the Electron Cash SPV Wallet
 # License: MIT
 import unittest
-from .. import schnorr
+from bitcoincash.core import schnorr
 
 import hashlib
 import secrets
