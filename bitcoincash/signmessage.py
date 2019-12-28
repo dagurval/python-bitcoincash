@@ -36,7 +36,7 @@ def VerifyMessage(address, message, sig):
 
 
 def SignMessage(key, message):
-    sig, i = key.sign_compact(message.GetHash())
+    sig, i = key.sign_compactECDSA(message.GetHash())
 
     meta = 27 + i
     if key.is_compressed:

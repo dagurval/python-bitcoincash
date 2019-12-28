@@ -566,7 +566,7 @@ class CECKey:
             if Q: _ssl.EC_POINT_free(Q)
 
 class CPubKey(bytes):
-    """An encapsulated public key
+    """An encapsulated secp256k1 public key
 
     Attributes:
 
@@ -617,7 +617,7 @@ class CPubKey(bytes):
     def is_compressed(self):
         return len(self) == 33
 
-    def verify(self, hash, sig): # pylint: disable=redefined-builtin
+    def verifyECDSA(self, hash, sig): # pylint: disable=redefined-builtin
         return self._cec_key.verify(hash, sig)
 
     def __str__(self):

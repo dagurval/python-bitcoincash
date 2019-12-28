@@ -226,28 +226,28 @@ class Test_CBitcoinSecret(unittest.TestCase):
     def test_sign(self):
         key = CBitcoinSecret('5KJvsngHeMpm884wtkJNzQGaCErckhHJBGFsvd3VyK5qMZXj3hS')
         hash = b'\x00' * 32
-        sig = key.sign(hash)
+        sig = key.signECDSA(hash)
 
         # Check a valid signature
-        self.assertTrue(key.pub.verify(hash, sig))
+        self.assertTrue(key.pub.verifyECDSA(hash, sig))
         self.assertTrue(IsLowDERSignature(sig))
 
         # Check that invalid hash returns false
-        self.assertFalse(key.pub.verify(b'\xFF'*32, sig))
+        self.assertFalse(key.pub.verifyECDSA(b'\xFF'*32, sig))
 
         # Check that invalid signature returns false.
         #
         # Note the one-in-four-billion chance of a false positive :)
-        self.assertFalse(key.pub.verify(hash, sig[0:-4] + b'\x00\x00\x00\x00'))
+        self.assertFalse(key.pub.verifyECDSA(hash, sig[0:-4] + b'\x00\x00\x00\x00'))
 
     def test_sign_invalid_hash(self):
         key = CBitcoinSecret('5KJvsngHeMpm884wtkJNzQGaCErckhHJBGFsvd3VyK5qMZXj3hS')
         with self.assertRaises(TypeError):
-          sig = key.sign('0' * 32)
+          sig = key.signECDSA('0' * 32)
 
         hash = b'\x00' * 32
         with self.assertRaises(ValueError):
-          sig = key.sign(hash[0:-2])
+          sig = key.signECDSA(hash[0:-2])
 
 
 class Test_RFC6979(unittest.TestCase):
@@ -268,7 +268,7 @@ class Test_RFC6979(unittest.TestCase):
         ]
         for vector in test_vectors:
             secret = CBitcoinSecret.from_secret_bytes(x('{:064x}'.format(vector[0])))
-            encoded_sig = secret.sign(hashlib.sha256(vector[1].encode('utf8')).digest())
+            encoded_sig = secret.signECDSA(hashlib.sha256(vector[1].encode('utf8')).digest())
 
             assert(encoded_sig[0] == 0x30)
             assert(encoded_sig[1] == len(encoded_sig)-2)
