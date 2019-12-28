@@ -206,7 +206,7 @@ class P2PKHBitcoinAddress(CBitcoinAddress):
         return script.CScript([script.OP_DUP, script.OP_HASH160, self, script.OP_EQUALVERIFY, script.OP_CHECKSIG])
 
 class CKey(object):
-    """An encapsulated private key
+    """An encapsulated secp256k1 private key
 
     Attributes:
 
@@ -226,10 +226,10 @@ class CKey(object):
     def is_compressed(self):
         return self.pub.is_compressed
 
-    def sign(self, hash):
+    def signECDSA(self, hash):
         return self._cec_key.sign(hash)
 
-    def sign_compact(self, hash):
+    def sign_compactECDSA(self, hash):
         return self._cec_key.sign_compact(hash)
 
 class CBitcoinSecretError(bitcoincash.base58.Base58Error):
