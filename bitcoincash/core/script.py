@@ -29,6 +29,7 @@ import struct
 
 import bitcoincash.core
 import bitcoincash.core._bignum
+from bitcoincash.core.serialize import uint256_from_str, uint256_to_str, ser_string
 
 MAX_SCRIPT_SIZE = 10000
 MAX_SCRIPT_ELEMENT_SIZE = 520
@@ -777,6 +778,7 @@ class CScript(bytes):
 SIGHASH_ALL = 1
 SIGHASH_NONE = 2
 SIGHASH_SINGLE = 3
+SIGHASH_FORKID = 0x40
 SIGHASH_ANYONECANPAY = 0x80
 
 def FindAndDelete(script, sig):
@@ -848,8 +850,11 @@ def CompareBigEndian(c1, c2):
     return 0
 
 
-def RawSignatureHash(script, txTo, inIdx, hashtype):
+def RawSignatureHashLegacy(script, txTo, inIdx, hashtype):
     """Consensus-correct SignatureHash
+
+    This is the old signature hash algorithm, before the Bitcoin Cash split
+    in 2017.
 
     Returns (hash, err) to precisely match the consensus-critical behavior of
     the SIGHASH_SINGLE bug. (inIdx is *not* checked for validity)
@@ -895,24 +900,98 @@ def RawSignatureHash(script, txTo, inIdx, hashtype):
         txtmp.vin.append(tmp)
 
     s = txtmp.serialize()
-    s += struct.pack(b"<I", hashtype)
+    s += struct.pack(b"<i", hashtype)
 
     hash = bitcoincash.core.Hash(s)
 
     return (hash, None)
 
 
-def SignatureHash(script, txTo, inIdx, hashtype):
+def SignatureHashLegacy(script, txTo, inIdx, hashtype):
     """Calculate a signature hash
+
+    This is the old signature hash algorithm, before the Bitcoin Cash split
+    in 2017.
 
     'Cooked' version that checks if inIdx is out of bounds - this is *not*
     consensus-correct behavior, but is what you probably want for general
     wallet use.
     """
-    (h, err) = RawSignatureHash(script, txTo, inIdx, hashtype)
+    (h, err) = RawSignatureHashLegacy(script, txTo, inIdx, hashtype)
     if err is not None:
         raise ValueError(err)
     return h
+
+def SignatureHash(script, txTo, inIdx, hashtype, amount, *,
+        legacy_allow = False, legacy_raw = False):
+    """Calculate a signature hash
+
+    legacy_allow - Allow hashing using the pre-fork signature hash algorithm
+
+    legacy_raw - Don't use the 'Cooked' version that checks if inIdx is out
+                 of bounds.
+    """
+
+    if not SIGHASH_FORKID & hashtype:
+        if not legacy_allow:
+            raise ValueError(
+                "SignatureHash expects SIGHASH_FORKID flag. "
+                "If you really want to hash with the old signature hash "
+                "algoritm, set legacy_allow=True")
+        elif legacy_raw:
+            (h, _) = RawSignatureHashLegacy(script, txTo, inIdx, hashtype)
+            return h
+        else:
+            return SignatureHashLegacy(script, txTo, inIdx, hashtype)
+
+    if amount is None:
+        raise ValueError("Cannot hash with new signature hash algorithm when "
+                "amount is None")
+
+    hashPrevouts = 0
+    hashSequence = 0
+    hashOutputs = 0
+
+    def hash256(x):
+        import hashlib
+        sha256 = lambda s: hashlib.new('sha256', s).digest()
+        return sha256(sha256(x))
+
+
+    if not (hashtype & SIGHASH_ANYONECANPAY):
+        serialize_prevouts = bytes()
+        for i in txTo.vin:
+            serialize_prevouts += i.prevout.serialize()
+        hashPrevouts = uint256_from_str(hash256(serialize_prevouts))
+
+    if (not (hashtype & SIGHASH_ANYONECANPAY) and (hashtype & 0x1f) != SIGHASH_SINGLE and (hashtype & 0x1f) != SIGHASH_NONE):
+        serialize_sequence = bytes()
+        for i in txTo.vin:
+            serialize_sequence += struct.pack("<I", i.nSequence)
+        hashSequence = uint256_from_str(hash256(serialize_sequence))
+
+    if ((hashtype & 0x1f) != SIGHASH_SINGLE and (hashtype & 0x1f) != SIGHASH_NONE):
+        serialize_outputs = bytes()
+        for o in txTo.vout:
+            serialize_outputs += o.serialize()
+        hashOutputs = uint256_from_str(hash256(serialize_outputs))
+    elif ((hashtype & 0x1f) == SIGHASH_SINGLE and inIdx < len(txTo.vout)):
+        serialize_outputs = txTo.vout[inIdx].serialize()
+        hashOutputs = uint256_from_str(hash256(serialize_outputs))
+
+    ss = bytes()
+    ss += struct.pack("<i", txTo.nVersion)
+    ss += uint256_to_str(hashPrevouts)
+    ss += uint256_to_str(hashSequence)
+    ss += txTo.vin[inIdx].prevout.serialize()
+    ss += ser_string(script)
+    ss += struct.pack("<q", amount)
+    ss += struct.pack("<I", txTo.vin[inIdx].nSequence)
+    ss += uint256_to_str(hashOutputs)
+    ss += struct.pack("<I", txTo.nLockTime)
+    ss += struct.pack("<i", hashtype)
+
+    return hash256(ss)
 
 
 __all__ = (
@@ -1053,7 +1132,8 @@ __all__ = (
         'SIGHASH_SINGLE',
         'SIGHASH_ANYONECANPAY',
         'FindAndDelete',
-        'RawSignatureHash',
+        'RawSignatureHashLegacy',
+        'SignatureHashLegacy',
         'SignatureHash',
         'IsLowDERSignature',
 )

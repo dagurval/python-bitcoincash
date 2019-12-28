@@ -131,7 +131,7 @@ def _CastToBool(s):
     return False
 
 
-def _CheckSig(sig, pubkey, script, txTo, inIdx, err_raiser):
+def _CheckSig(sig, pubkey, script, txTo, inIdx, amount, err_raiser):
     key = bitcoincash.core.key.CECKey()
     key.set_pubkey(pubkey)
 
@@ -142,17 +142,17 @@ def _CheckSig(sig, pubkey, script, txTo, inIdx, err_raiser):
 
     # Raw signature hash due to the SIGHASH_SINGLE bug
     #
-    # Note that we never raise an exception if RawSignatureHash() returns an
-    # error code. However the first error code case, where inIdx >=
-    # len(txTo.vin), shouldn't ever happen during EvalScript() as that would
+    # We ignore the error code of RawSignatureHashLegacy, where inIdx >=
+    # len(txTo.vin). It shouldn't ever happen during EvalScript() as that would
     # imply the scriptSig being checked doesn't correspond to a valid txout -
     # that should cause other validation machinery to fail long before we ever
     # got here.
-    (h, err) = RawSignatureHash(script, txTo, inIdx, hashtype)
+    h = SignatureHash(script, txTo, inIdx, hashtype, amount,
+            legacy_allow = True, legacy_raw = True)
     return key.verify(h, sig)
 
 
-def _CheckMultiSig(opcode, script, stack, txTo, inIdx, flags, err_raiser, nOpCount):
+def _CheckMultiSig(opcode, script, stack, txTo, inIdx, flags, amount, err_raiser, nOpCount):
     i = 1
     if len(stack) < i:
         err_raiser(MissingOpArgumentsError, opcode, stack, i)
@@ -195,7 +195,7 @@ def _CheckMultiSig(opcode, script, stack, txTo, inIdx, flags, err_raiser, nOpCou
         sig = stack[-isig]
         pubkey = stack[-ikey]
 
-        if _CheckSig(sig, pubkey, script, txTo, inIdx, err_raiser):
+        if _CheckSig(sig, pubkey, script, txTo, inIdx, amount, err_raiser):
             isig += 1
             sigs_count -= 1
 
@@ -365,7 +365,7 @@ def _CheckExec(vfExec):
     return True
 
 
-def _EvalScript(stack, scriptIn, txTo, inIdx, flags=()):
+def _EvalScript(stack, scriptIn, txTo, inIdx, flags=(), amount = None):
     """Evaluate a script
 
     """
@@ -486,7 +486,7 @@ def _EvalScript(stack, scriptIn, txTo, inIdx, flags=()):
 
             elif sop == OP_CHECKMULTISIG or sop == OP_CHECKMULTISIGVERIFY:
                 tmpScript = CScript(scriptIn[pbegincodehash:])
-                _CheckMultiSig(sop, tmpScript, stack, txTo, inIdx, flags, err_raiser, nOpCount)
+                _CheckMultiSig(sop, tmpScript, stack, txTo, inIdx, flags, amount, err_raiser, nOpCount)
 
             elif sop == OP_CHECKSIG or sop == OP_CHECKSIGVERIFY:
                 check_args(2)
@@ -500,7 +500,7 @@ def _EvalScript(stack, scriptIn, txTo, inIdx, flags=()):
                 # scriptSig and scriptPubKey are processed separately.
                 tmpScript = FindAndDelete(tmpScript, CScript([vchSig]))
 
-                ok = _CheckSig(vchSig, vchPubKey, tmpScript, txTo, inIdx,
+                ok = _CheckSig(vchSig, vchPubKey, tmpScript, txTo, inIdx, amount,
                                err_raiser)
                 if not ok and sop == OP_CHECKSIGVERIFY:
                     err_raiser(VerifyOpFailedError, sop)
@@ -715,7 +715,7 @@ def _EvalScript(stack, scriptIn, txTo, inIdx, flags=()):
                               flags=flags)
 
 
-def EvalScript(stack, scriptIn, txTo, inIdx, flags=()):
+def EvalScript(stack, scriptIn, txTo, inIdx, flags=(), amount = None):
     """Evaluate a script
 
     stack    - Initial stack
@@ -727,10 +727,12 @@ def EvalScript(stack, scriptIn, txTo, inIdx, flags=()):
     inIdx    - txin index of the scriptSig
 
     flags    - SCRIPT_VERIFY_* flags to apply
+
+    amount   - The amount in the txin
     """
 
     try:
-        _EvalScript(stack, scriptIn, txTo, inIdx, flags=flags)
+        _EvalScript(stack, scriptIn, txTo, inIdx, flags=flags, amount = amount)
     except CScriptInvalidError as err:
         raise EvalScriptError(repr(err),
                               stack=stack,
