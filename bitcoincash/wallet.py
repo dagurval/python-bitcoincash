@@ -232,6 +232,13 @@ class CKey(object):
     def sign_compactECDSA(self, hash):
         return self._cec_key.sign_compact(hash)
 
+    def signSchnorr(self, hash):
+        """
+        Create a Schnorr signature
+        """
+        import bitcoincash.core.schnorr as schnorr
+        return schnorr.sign(self._cec_key.get_raw_privkey(), hash)
+
 class CBitcoinSecretError(bitcoincash.base58.Base58Error):
     pass
 

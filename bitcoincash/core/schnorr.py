@@ -389,3 +389,10 @@ class BlindSignatureRequest:
         if check and not verify(self.pubkey, sig, self.message_hash):
             raise RuntimeError("Blind signature verification failed.")
         return sig
+
+__all__ = (
+    'sign',
+    'verify',
+    'BlindSigner',
+    'BlindSignatureRequest'
+)

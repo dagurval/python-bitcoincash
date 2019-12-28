@@ -6,6 +6,7 @@
 # License: MIT
 import unittest
 from bitcoincash.core import schnorr
+from bitcoincash.wallet import CKey
 
 import hashlib
 import secrets
@@ -37,6 +38,14 @@ class TestSchnorr(unittest.TestCase):
         self.assertEqual(sig, ref_sig)
 
         self.assertTrue(schnorr.verify(pubkey, sig, msghash))
+
+        # Same test via CKey & CPubKey
+        key = CKey(private_key)
+        self.assertEqual(pubkey, key.pub)
+        sig = key.signSchnorr(msghash)
+        self.assertEqual(sig, ref_sig)
+        self.assertTrue(key.pub.verifySchnorr(msghash, sig))
+
 
 class TestBlind(unittest.TestCase):
 
