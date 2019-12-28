@@ -12,7 +12,7 @@ with open(os.path.join(here, 'README.md')) as f:
 requires = []
 
 setup(name='bitcoincash',
-      python_requires='>3.5.6',
+      python_requires='>3.6.7',
       version=__version__,
       description='The Swiss Army Knife of the Bitcoin Cash protocol.',
       long_description=README,
@@ -22,7 +22,7 @@ setup(name='bitcoincash',
           "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
       ],
       url='https://bitcoincash.network/python/',
-      keywords='bitcoin cash bch',
+      keywords='bitcoin cash bch bitcoincash',
       packages=find_packages(),
       zip_safe=False,
       install_requires=requires,
