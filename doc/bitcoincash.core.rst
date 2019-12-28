@@ -13,6 +13,11 @@ Everything consensus critical is found in the core subpackage.
 
 .. automodule:: bitcoincash.core.key
 
+:mod:`schnorr`
+--------------
+
+.. automodule:: bitcoincash.core.schnorr
+
 :mod:`script`
 -------------
 

@@ -13,10 +13,12 @@ import secrets
 
 class TestSchnorr(unittest.TestCase):
 
+    @unittest.skipIf(not schnorr.is_available(), "Schnorr not available on this platform")
     def test_schnorr(self):
         ''' Test Schnorr implementation.
         Duplicate the deterministic sig test from Bitcoin ABC's
         src/test/key_tests.cpp '''
+
         private_key = bytes.fromhex(
             "12b004fff7f4b69ef8650e767f18f11ede158148b425660723b9f9a66e61f747")
 
@@ -49,6 +51,7 @@ class TestSchnorr(unittest.TestCase):
 
 class TestBlind(unittest.TestCase):
 
+    @unittest.skipIf(not schnorr.is_available(), "Schnorr not available on this platform")
     def test_blind(self):
         from bitcoincash.wallet import CBitcoinSecret
         # signer
@@ -75,6 +78,7 @@ class TestBlind(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             signature = requester.finalize(s_bad)
 
+    @unittest.skipIf(not schnorr.is_available(), "Schnorr not available on this platform")
     def test_jacobi(self):
         """ test the faster jacobi implementation against ecdsa package"""
         alist = [-2,-1,0,1,2,3,4] + [secrets.randbits(256) for _ in range(100)]

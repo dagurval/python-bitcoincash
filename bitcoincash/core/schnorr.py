@@ -16,8 +16,6 @@
 # propagated, or distributed except according to the terms contained in the
 # LICENSE file.
 '''
-Schnorr sign/verify uses Requries libsecp256k1 acceleration if available.
-
 This is a Python-only Schnorr sign/verify. Compared to the libsecp256k1 bundled with
 Bitcoin Unlimited this is much less secure as it contains side channel
 vulnerabilities, and must not be used in an automated-signing environment.
@@ -26,7 +24,19 @@ import os
 import sys
 import hmac, hashlib
 
-import ecdsa
+IS_AVAILABLE = False
+try:
+    import ecdsa
+    IS_AVAILABLE = True
+except ImportError as e:
+    from unittest.mock import Mock
+    ecdsa = Mock()
+
+def is_available():
+    """If Schnorr is available in this installation. Schnorr requires python
+    module ecdsa to be installed."""
+    global IS_AVAILABLE
+    return IS_AVAILABLE
 
 def jacobi(a, n):
     """Jacobi symbol"""
@@ -99,6 +109,9 @@ def sign(privkey, message_hash):
     `message_hash` should be the 32 byte sha256d hash of the tx input (or
     message) you want to sign
     '''
+
+    if not is_available():
+        raise NotImplementedError("Schnorr is not available because module 'ecdsa' is not installed.")
 
     if not isinstance(privkey, bytes) or len(privkey) != 32:
         raise ValueError('privkey must be a bytes object of length 32')
@@ -178,6 +191,9 @@ def verify(pubkey, signature, message_hash):
     `message_hash` should be the 32 byte sha256d hash of the tx message to be
     verified'''
 
+    if not is_available():
+        raise NotImplementedError("Schnorr is not available because module 'ecdsa' is not installed.")
+
     if not isinstance(pubkey, bytes) or len(pubkey) not in (33, 65):
         raise ValueError('pubkey must be a bytes object of either length 33 or 65')
     if not isinstance(signature, bytes) or len(signature) != 64:
@@ -254,7 +270,9 @@ class BlindSigner:
     that allow an additional signature to be created. E.g., with 511 parallel
     requests, 512 signatures could be produced with ~2^35 work of precomputation
     on the part of the adversary.
+
     See:
+
     - Schnorr 2001 "Security of Blind Discrete Log Signatures against Interactive Attacks"
       https://www.math.uni-frankfurt.de/~dmst/research/papers/schnorr.blind_sigs_attack.2001.pdf
     - Wagner 2002 "A Generalized Birthday Problem"
@@ -265,6 +283,9 @@ class BlindSigner:
     order = ecdsa.SECP256k1.generator.order()
 
     def __init__(self):
+        if not is_available():
+            raise NotImplementedError("Schnorr is not available because"
+            " module 'ecdsa' is not installed.")
         k = ecdsa.util.randrange(self.order)
         # we store k in a list since .pop() is atomic.
         self._kcontainer = [k]
@@ -327,6 +348,9 @@ class BlindSignatureRequest:
 
     def __init__(self, pubkey, R, message_hash):
         """ Expects three bytes objects """
+        if not is_available():
+            raise NotImplementedError("Schnorr is not available because"
+            " module 'ecdsa' is not installed.")
         assert isinstance(pubkey, bytes)
         assert isinstance(R, bytes)
         assert len(message_hash) == 32
@@ -393,6 +417,7 @@ class BlindSignatureRequest:
 __all__ = (
     'sign',
     'verify',
+    'is_available',
     'BlindSigner',
     'BlindSignatureRequest'
 )

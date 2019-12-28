@@ -23,6 +23,7 @@ consensus critical and non-consensus-critical.
     bitcoincash.core            - Basic core definitions, datastructures, and
                                   (context-independent) validation
     bitcoincash.core.key        - ECC pubkeys
+    bitcoincash.core.schnorr    - Schnorr signing/verification
     bitcoincash.core.script     - Scripts and opcodes
     bitcoincash.core.scripteval - Script evaluation/verification
     bitcoincash.core.serialize  - Serialization
