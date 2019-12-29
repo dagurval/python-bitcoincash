@@ -620,6 +620,10 @@ class CPubKey(bytes):
     def verifyECDSA(self, hash, sig): # pylint: disable=redefined-builtin
         return self._cec_key.verify(hash, sig)
 
+    def verifySchnorr(self, hash, sig):
+        import bitcoincash.core.schnorr as schnorr
+        return schnorr.verify(self, sig, hash)
+
     def __str__(self):
         return repr(self)
 

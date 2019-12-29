@@ -2,8 +2,9 @@ git:
   depth: 9999999
 language: python
 python:
-  - "3.5"
   - "3.6"
   - "3.7"
 # command to run tests
+install:
+  - pip3 install ecdsa
 script: python3 -m unittest discover -v

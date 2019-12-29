@@ -2,6 +2,7 @@
 
 ## v0.1.5
 - Add Bitcoin Cash signature hash algorithm
+- Add Schnorr signing/verifying support
 
 ## v0.1.4
 - Add electrum support
