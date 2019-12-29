@@ -1130,6 +1130,7 @@ __all__ = (
         'SIGHASH_ALL',
         'SIGHASH_NONE',
         'SIGHASH_SINGLE',
+        'SIGHASH_FORKID',
         'SIGHASH_ANYONECANPAY',
         'FindAndDelete',
         'RawSignatureHashLegacy',

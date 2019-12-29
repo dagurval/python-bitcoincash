@@ -3,6 +3,9 @@
 ## v0.1.5
 - Add Bitcoin Cash signature hash algorithm
 - Add Schnorr signing/verifying support
+- [consensus] Add Schnorr to OP_CHECKSIG(VERIFY) script evaluation
+- [consensus] Support Bitcoin Cash signature hash in OP_CHECKSIG(VERIFY)
+- [consensus] Add NULLFAIL check to OP_CHECKSIG
 
 ## v0.1.4
 - Add electrum support

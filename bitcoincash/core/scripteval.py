@@ -30,6 +30,7 @@ import bitcoincash.core
 import bitcoincash.core._bignum
 import bitcoincash.core.key
 import bitcoincash.core.serialize
+import bitcoincash.core.schnorr
 
 # Importing everything for simplicity; note that we use __all__ at the end so
 # we're not exporting the whole contents of the script module.
@@ -48,6 +49,10 @@ SCRIPT_VERIFY_MINIMALDATA = object()
 SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS = object()
 SCRIPT_VERIFY_CLEANSTACK = object()
 SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY = object()
+SCRIPT_VERIFY_NULLFAIL = object()
+SCRIPT_ENABLE_SIGHASH_FORKID = object()
+"""Signature(s) must be empty vector if an CHECK(MULTI)SIG operation failed
+"""
 
 SCRIPT_VERIFY_FLAGS_BY_NAME = {
     'P2SH': SCRIPT_VERIFY_P2SH,
@@ -60,6 +65,8 @@ SCRIPT_VERIFY_FLAGS_BY_NAME = {
     'DISCOURAGE_UPGRADABLE_NOPS': SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS,
     'CLEANSTACK': SCRIPT_VERIFY_CLEANSTACK,
     'CHECKLOCKTIMEVERIFY': SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY,
+    'NULLFAIL': SCRIPT_VERIFY_NULLFAIL,
+    'SIGHASH_FORKID': SCRIPT_ENABLE_SIGHASH_FORKID
 }
 
 class EvalScriptError(bitcoincash.core.ValidationError):
@@ -131,14 +138,19 @@ def _CastToBool(s):
     return False
 
 
-def _CheckSig(sig, pubkey, script, txTo, inIdx, amount, err_raiser):
-    key = bitcoincash.core.key.CECKey()
-    key.set_pubkey(pubkey)
-
+def _CheckSig(sig, pubkey, script, txTo, inIdx, amount, err_raiser, opcode, flags):
     if len(sig) == 0:
         return False
+
+    is_schnorr = len(sig) == 65
+
     hashtype = _bord(sig[-1])
     sig = sig[:-1]
+
+    if is_schnorr and SCRIPT_ENABLE_SIGHASH_FORKID in flags \
+            and not hashtype & SIGHASH_FORKID:
+        err_raiser(ArgumentsInvalidError, opcode,
+                "Schnorr signature must use SIGHASH_FORKID")
 
     # Raw signature hash due to the SIGHASH_SINGLE bug
     #
@@ -147,9 +159,20 @@ def _CheckSig(sig, pubkey, script, txTo, inIdx, amount, err_raiser):
     # imply the scriptSig being checked doesn't correspond to a valid txout -
     # that should cause other validation machinery to fail long before we ever
     # got here.
+
     h = SignatureHash(script, txTo, inIdx, hashtype, amount,
-            legacy_allow = True, legacy_raw = True)
-    return key.verify(h, sig)
+        legacy_allow = True, legacy_raw = True)
+
+    if is_schnorr:
+        try:
+            return bitcoincash.core.schnorr.verify(pubkey, sig, h)
+        except ValueError as e:
+            err_raiser(ArgumentsInvalidError, opcode, "pubkey error: {}".format(e))
+    else:
+        # ECDSA signature
+        key = bitcoincash.core.key.CECKey()
+        key.set_pubkey(pubkey)
+        return key.verify(h, sig)
 
 
 def _CheckMultiSig(opcode, script, stack, txTo, inIdx, flags, amount, err_raiser, nOpCount):
@@ -195,7 +218,11 @@ def _CheckMultiSig(opcode, script, stack, txTo, inIdx, flags, amount, err_raiser
         sig = stack[-isig]
         pubkey = stack[-ikey]
 
-        if _CheckSig(sig, pubkey, script, txTo, inIdx, amount, err_raiser):
+        if len(sig) == 65:
+            # Multisig schnorr NYI
+            err_raiser(ArgumentsInvalidError, opcode, "schnorr in multisig NYI")
+
+        if _CheckSig(sig, pubkey, script, txTo, inIdx, amount, err_raiser, opcode, flags):
             isig += 1
             sigs_count -= 1
 
@@ -501,7 +528,12 @@ def _EvalScript(stack, scriptIn, txTo, inIdx, flags=(), amount = None):
                 tmpScript = FindAndDelete(tmpScript, CScript([vchSig]))
 
                 ok = _CheckSig(vchSig, vchPubKey, tmpScript, txTo, inIdx, amount,
-                               err_raiser)
+                               err_raiser, sop, flags)
+
+                if not ok and len(vchSig) and SCRIPT_VERIFY_NULLFAIL in flags:
+                    err_raiser(ArgumentsInvalidError, sop,
+                            "Signature was provided and it failed (NULLFAIL).")
+
                 if not ok and sop == OP_CHECKSIGVERIFY:
                     err_raiser(VerifyOpFailedError, sop)
 
@@ -744,7 +776,7 @@ def EvalScript(stack, scriptIn, txTo, inIdx, flags=(), amount = None):
 class VerifyScriptError(bitcoincash.core.ValidationError):
     pass
 
-def VerifyScript(scriptSig, scriptPubKey, txTo, inIdx, flags=()):
+def VerifyScript(scriptSig, scriptPubKey, txTo, inIdx, flags=(), amount = None):
     """Verify a scriptSig satisfies a scriptPubKey
 
     scriptSig    - Signature
@@ -758,10 +790,10 @@ def VerifyScript(scriptSig, scriptPubKey, txTo, inIdx, flags=()):
     Raises a ValidationError subclass if the validation fails.
     """
     stack = []
-    EvalScript(stack, scriptSig, txTo, inIdx, flags=flags)
+    EvalScript(stack, scriptSig, txTo, inIdx, flags=flags, amount=amount)
     if SCRIPT_VERIFY_P2SH in flags:
         stackCopy = list(stack)
-    EvalScript(stack, scriptPubKey, txTo, inIdx, flags=flags)
+    EvalScript(stack, scriptPubKey, txTo, inIdx, flags=flags, amount=amount)
     if len(stack) == 0:
         raise VerifyScriptError("scriptPubKey left an empty stack")
     if not _CastToBool(stack[-1]):
@@ -782,7 +814,7 @@ def VerifyScript(scriptSig, scriptPubKey, txTo, inIdx, flags=()):
 
         pubKey2 = CScript(stack.pop())
 
-        EvalScript(stack, pubKey2, txTo, inIdx, flags=flags)
+        EvalScript(stack, pubKey2, txTo, inIdx, flags=flags, amount=amount)
 
         if not len(stack):
             raise VerifyScriptError("P2SH inner scriptPubKey left an empty stack")
