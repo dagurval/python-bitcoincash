@@ -744,7 +744,7 @@ def EvalScript(stack, scriptIn, txTo, inIdx, flags=(), amount = None):
 class VerifyScriptError(bitcoincash.core.ValidationError):
     pass
 
-def VerifyScript(scriptSig, scriptPubKey, txTo, inIdx, flags=()):
+def VerifyScript(scriptSig, scriptPubKey, txTo, inIdx, flags=(), amount = None):
     """Verify a scriptSig satisfies a scriptPubKey
 
     scriptSig    - Signature
@@ -758,10 +758,10 @@ def VerifyScript(scriptSig, scriptPubKey, txTo, inIdx, flags=()):
     Raises a ValidationError subclass if the validation fails.
     """
     stack = []
-    EvalScript(stack, scriptSig, txTo, inIdx, flags=flags)
+    EvalScript(stack, scriptSig, txTo, inIdx, flags=flags, amount=amount)
     if SCRIPT_VERIFY_P2SH in flags:
         stackCopy = list(stack)
-    EvalScript(stack, scriptPubKey, txTo, inIdx, flags=flags)
+    EvalScript(stack, scriptPubKey, txTo, inIdx, flags=flags, amount=amount)
     if len(stack) == 0:
         raise VerifyScriptError("scriptPubKey left an empty stack")
     if not _CastToBool(stack[-1]):
@@ -782,7 +782,7 @@ def VerifyScript(scriptSig, scriptPubKey, txTo, inIdx, flags=()):
 
         pubKey2 = CScript(stack.pop())
 
-        EvalScript(stack, pubKey2, txTo, inIdx, flags=flags)
+        EvalScript(stack, pubKey2, txTo, inIdx, flags=flags, amount=amount)
 
         if not len(stack):
             raise VerifyScriptError("P2SH inner scriptPubKey left an empty stack")
