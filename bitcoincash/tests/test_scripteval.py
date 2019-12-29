@@ -54,16 +54,19 @@ def parse_script(s):
     return CScript(b''.join(r))
 
 
-def load_test_vectors(name):
+def load_test_vectors(name, has_failcode = False):
     with open(os.path.dirname(__file__) + '/data/' + name, 'r') as fd:
         for test_case in json.load(fd):
             if len(test_case) == 1:
                 continue # comment
 
-            if len(test_case) == 3:
+            if not has_failcode and len(test_case) == 3:
                 test_case.append('') # add missing comment
 
-            scriptSig, scriptPubKey, flags, comment = test_case
+            if not has_failcode:
+                test_case.insert(3, None) # add missing failcode
+
+            scriptSig, scriptPubKey, flags, failcode, comment = test_case
 
             scriptSig = parse_script(scriptSig)
             scriptPubKey = parse_script(scriptPubKey)
@@ -81,7 +84,7 @@ def load_test_vectors(name):
 
                     flag_set.add(flag)
 
-            yield (scriptSig, scriptPubKey, flag_set, comment, test_case)
+            yield (scriptSig, scriptPubKey, flag_set, failcode, comment, test_case)
 
 
 class Test_EvalScript(unittest.TestCase):
@@ -95,7 +98,7 @@ class Test_EvalScript(unittest.TestCase):
         return (txCredit, txSpend)
 
     def test_script_valid(self):
-        for scriptSig, scriptPubKey, flags, comment, test_case in load_test_vectors('script_valid.json'):
+        for scriptSig, scriptPubKey, flags, _, comment, test_case in load_test_vectors('script_valid.json'):
             (txCredit, txSpend) = self.create_test_txs(scriptSig, scriptPubKey)
 
             try:
@@ -104,7 +107,7 @@ class Test_EvalScript(unittest.TestCase):
                 self.fail('Script FAILED: %r %r %r with exception %r' % (scriptSig, scriptPubKey, comment, err))
 
     def test_script_invalid(self):
-        for scriptSig, scriptPubKey, flags, comment, test_case in load_test_vectors('script_invalid.json'):
+        for scriptSig, scriptPubKey, flags, _, comment, test_case in load_test_vectors('script_invalid.json'):
             (txCredit, txSpend) = self.create_test_txs(scriptSig, scriptPubKey)
 
             try:
@@ -113,3 +116,17 @@ class Test_EvalScript(unittest.TestCase):
                 continue
 
             self.fail('Expected %r to fail' % test_case)
+
+    def test_script_schnorr(self):
+        for scriptSig, scriptPubKey, flags, failcode, comment, test_case in load_test_vectors('script_schnorr.json', has_failcode = True):
+
+            (txCredit, txSpend) = self.create_test_txs(scriptSig, scriptPubKey)
+            try:
+                VerifyScript(scriptSig, scriptPubKey, txSpend, 0, flags, amount = 0)
+            except ValidationError as err:
+                if failcode == "OK":
+                    self.fail('Script FAILED: %r %r %r with exception %r' % (scriptSig, scriptPubKey, comment, err))
+                continue
+
+            if failcode != "OK":
+                self.fail('Expected {} to fail'.format(test_case))
