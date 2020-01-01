@@ -6,6 +6,7 @@
 - [consensus] Add Schnorr to OP_CHECKSIG(VERIFY) script evaluation
 - [consensus] Support Bitcoin Cash signature hash in OP_CHECKSIG(VERIFY)
 - [consensus] Add NULLFAIL check to OP_CHECKSIG
+- Support converting address to electrum script hash
 
 ## v0.1.4
 - Add electrum support
