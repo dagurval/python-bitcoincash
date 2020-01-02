@@ -81,6 +81,19 @@ class CBitcoinAddress(bitcoincash.cashaddr.CashAddrData):
         """Convert an address to a scriptPubKey"""
         raise NotImplementedError
 
+    def to_scriptHash(self, *, hashfunc = "sha256"):
+        """A script hash is the hash of the binary bytes of the locking
+        script (ScriptPubKey), expressed as a hexadecimal string. Like
+        for block and transaction hashes, when converting the big-endian
+        binary hash to a hexadecimal string the least-significant byte
+        appears first, and the most-significant byte last.
+
+        This representation of an address is used in the Electrum protocol."""
+        if hashfunc != "sha256":
+            raise ValueError("Only sha256 hash function is supported")
+        import hashlib
+        return bitcoincash.core.b2lx(hashlib.sha256(self.to_scriptPubKey()).digest())
+
 class P2SHBitcoinAddress(CBitcoinAddress):
     @classmethod
     def from_bytes(cls, data, prefix, kind):

@@ -209,6 +209,16 @@ class Test_P2PKHBitcoinAddress(unittest.TestCase):
         with self.assertRaises(CBitcoinAddressError):
             P2PKHBitcoinAddress.from_pubkey(CPubKey(x('0378d430274f8c5ec1321338151e9f27f4c676a008bdf8638d07c0b6be9ab35c72')))
 
+    def test_to_scriptHash(self):
+        # P2PKH, example from electrumx doc
+        addr = CBitcoinAddress("bitcoincash:qp3wjpa3tjlj042z2wv7hahsldgwhwy0rq9sywjpyy")
+        self.assertEqual("8b01df4e368ea28f8dc0423bcf7a4923e3a12d307c875e47a0cfbf90b5c39161",
+            addr.to_scriptHash())
+
+        # P2SH, eatbch
+        addr = CBitcoinAddress("bitcoincash:pp8skudq3x5hzw8ew7vzsw8tn4k8wxsqsv0lt0mf3g")
+        self.assertEqual("829ce9ce75a8a8a01bf27a7365655506614ef0b8f5a7ecbef19093951a73b686", addr.to_scriptHash())
+
 class Test_CBitcoinSecret(unittest.TestCase):
     def test(self):
         def T(base58_privkey, expected_hex_pubkey, expected_is_compressed_value):
